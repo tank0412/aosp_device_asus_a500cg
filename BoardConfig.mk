@@ -135,7 +135,11 @@ BOARD_HAVE_NFC := false
 TARGET_USES_64_BIT_BINDER := true
 
 # Audio
+BOARD_USES_ALSA_AUDIO := true
+BUILD_WITH_ALSA_UTILS := true
 BOARD_USES_TINY_ALSA_AUDIO := true
+BOARD_USES_AUDIO_HAL_XML := true
+BOARD_USES_AUDIO_HAL_CONFIGURABLE := true
 
 # DRM Protected Video
 BOARD_WIDEVINE_OEMCRYPTO_LEVEL := 1
@@ -146,6 +150,11 @@ BUILD_ARM_FOR_X86 := true
 
 # HW_Renderer
 USE_OPENGL_RENDERER := true
+BOARD_EGL_CFG := device/asus/a500cg/configs/egl.cfg
+BOARD_ALLOW_EGL_HIBERNATION := true
+TARGET_RUNNING_WITHOUT_SYNC_FRAMEWORK := true
+COMMON_GLOBAL_CFLAGS += -DFORCE_SCREENSHOT_CPU_PATH
+BOARD_EGL_WORKAROUND_BUG_10194508 := true
 
 # DPST
 INTEL_DPST := true
@@ -158,13 +167,15 @@ RIL_SUPPORTS_SEEK := true
 
 # GPS
 BOARD_HAVE_GPS := true
+GPS_CHIP_VENDOR := bcm
+GPS_CHIP := 4752
 
 # RMT_STORAGE
 BOARD_USES_LEGACY_MMAP := true
 
 ADDITIONAL_DEFAULT_PROPERTIES += \
     ro.sf.lcd_density=320 \
-    ro.opengles.version=196608 \
+    ro.opengles.version = 131072 \
     gsm.net.interface=rmnet0 \
     persist.system.at-proxy.mode=0 \
     ro.dalvik.vm.native.bridge=libhoudini.so \
@@ -271,10 +282,98 @@ TARGET_HAS_MULTIPLE_DISPLAY := true
 # Rild
 # Radio
 BOARD_RIL_SUPPORTS_MULTIPLE_CLIENTS := true
-BBOARD_RIL_CLASS := ../../../$(LOCAL_PATH)/ril
+BOARD_RIL_CLASS := ../../../device/asus/T00F/ril
 SIM_COUNT := 2
+# Use Intel camera extras (HDR, face detection, panorama, etc.) by default
+USE_INTEL_CAMERA_EXTRAS := true
 
-#BOARD_FUNCTIONFS_HAS_SS_COUNT := true
+# select libcamera2 as the camera HAL
+USE_CAMERA_HAL2 := true
+USE_CSS_1_5 := true
+USE_CSS_2_0 := true
+USE_CSS_2_1 := true
+USE_INTEL_METABUFFER := true
+USE_INTEL_JPEG := true
+USE_CAMERA_IO_BREAKDOWN := true
 
-# Init
-TARGET_IGNORE_RO_BOOT_SERIALNO := true
+
+# disable the new V3 HAL by default so it can be added to the tree without conflicts
+# it will be enabled in selected platforms
+USE_CAMERA_HAL_3 := false
+
+# Set USE_VIDEO_EFFECT to 'false' to unsupport live face effect. And Set OMX Component Input Buffer Count to 2.
+USE_VIDEO_EFFECT := true
+
+# Do not use shared object of ia_face by default
+USE_SHARED_IA_FACE := false
+
+# Use multi-thread for acceleration
+USE_INTEL_MULT_THREAD := true
+
+# Use Async OMX for http streaming
+USE_ASYNC_OMX_CLIENT := true
+
+# Use panorama v1.0 by default
+IA_PANORAMA_VERSION := 1.0
+
+# Turn on GR_STATIC_RECT_VB flag in skia to boost performance
+TARGET_USE_GR_STATIC_RECT_VB := true
+
+ifeq ($(TARGET_RIL_DISABLE_STATUS_POLLING),true)
+ADDITIONAL_BUILD_PROPERTIES += ro.ril.status.polling.enable=0
+endif
+
+# Libm
+#TARGET_USE_PRIVATE_LIBM := true
+
+#TARGET_HAS_MULTIPLE_DISPLAY := true
+USE_MDS_LEGACY := true
+#BOARD_CAMERA_PLUGIN := vendor/intel/hardware/camera_extension
+#include $(COMMON_PATH)/BoardConfig.mk
+BOARD_USES_CYANOGEN_HARDWARE := true
+
+# HWcomposer
+INTEL_HWC := true
+INTEL_WIDI := false
+TARGET_SUPPORT_HWC_SYS_LAYER := true
+TARGET_HAS_MULTIPLE_DISPLAY := true
+
+INTEL_FEATURE_AWARESERVICE := true
+#PRODUCT_BOOT_JARS += com.intel.aware.awareservice
+
+# System's VSYNC phase offsets in nanoseconds
+VSYNC_EVENT_PHASE_OFFSET_NS := 7500000
+SF_VSYNC_EVENT_PHASE_OFFSET_NS := 5000000
+
+# Allow HWC to perform a final CSC on virtual displays
+TARGET_FORCE_HWC_FOR_VIRTUAL_DISPLAYS := true
+NUM_FRAMEBUFFER_SURFACE_BUFFERS := 3
+INTEL_WIDI := true
+HWUI_IMG_FBO_CACHE_OPTIM := true
+TARGET_INTEL_HWCOMPOSER_FORCE_ONLY_ONE_RGB_LAYER := true
+BOARD_USE_VIBRATOR := true
+#BOARD_USES_VIBRATOR_HAL_XML := true
+
+#USE_GENERAL_SENSOR_DRIVER := true
+# Lights
+TARGET_PROVIDES_LIBLIGHT := true
+
+BOARD_HAVE_AUDIENCE := true
+
+#Rapid-ril
+M2_VT_FEATURE_ENABLED := true
+M2_CALL_FAILED_CAUSE_FEATURE_ENABLED := true
+#M2_PIN_RETRIES_FEATURE_ENABLED := true
+BOARD_HAVE_IFX6265 := true
+M2_GET_SIM_SMS_STORAGE_ENABLED := true
+
+#WebRTC
+ENABLE_WEBRTC := true
+
+#ALAC CODEC
+USE_FEATURE_ALAC := true
+
+BOARD_HAVE_MODEM := true
+
+# Logcat use android kernel logger
+TARGET_USES_LOGD := false
