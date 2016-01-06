@@ -43,7 +43,14 @@ BOARD_CUSTOM_BOOTIMG_MK := $(LOCAL_PATH)/intel-boot-tools/boot.mk
 # specific management of audio_policy.conf
 PRODUCT_COPY_FILES += \
     device/asus/a500cg/configs/media_codecs.xml:system/etc/media_codecs.xml \
-    device/asus/a500cg/audio_policy.conf:system/etc/audio_policy.conf
+    device/asus/a500cg/audio_policy.conf:system/etc/audio_policy.conf \
+    frameworks/av/media/libstagefright/data/media_codecs_google_audio.xml:system/etc/media_codecs_google_audio.xml \
+    frameworks/av/media/libstagefright/data/media_codecs_google_telephony.xml:system/etc/media_codecs_google_telephony.xml \
+    frameworks/av/media/libstagefright/data/media_codecs_google_video.xml:system/etc/media_codecs_google_video.xml
+
+PRODUCT_COPY_FILES += \
+    device/asus/a500cg/config_lto.sh:system/etc/init.d/01config_lto
+
 
 # Intel Display
 PRODUCT_PROPERTY_OVERRIDES += \
@@ -63,7 +70,10 @@ PRODUCT_PACKAGES += \
   hostapd \
   dhcpcd.conf \
   wpa_supplicant \
-  wpa_supplicant.conf
+  wpa_supplicant.conf \
+  libwifi-hal-bcm \
+  lib_driver_cmd_bcmdhd \
+  iw
 
 # Audio
 PRODUCT_PACKAGES += \
@@ -122,6 +132,9 @@ PRODUCT_COPY_FILES += \
   $(call find-copy-subdir-files,*,device/asus/a500cg/include,obj/include)
 
 PRODUCT_PROPERTY_OVERRIDES += \
+ro.telephony.ril_class=Zenfone5RIL
+
+PRODUCT_PROPERTY_OVERRIDES += \
   ro.sf.lcd_density=320 \
   ro.opengles.version = 131072
 
@@ -145,8 +158,14 @@ PRODUCT_PACKAGES += \
 COMBO_CHIP_VENDOR := bcm
 PRODUCT_PACKAGES += \
   gps_bcm_4752 \
+  libflpso_proxy \
+  libflpso \
+  flp.a500cg \
+  gpsd \
   wifi_bcm_4330 \
-  bt_bcm4330
+  bt_bcm4330 \
+  gps.default \
+  gps.$(TARGET_DEVICE)
 
 # Keyhandler
 #PRODUCT_PACKAGES += \
@@ -227,27 +246,6 @@ PRODUCT_PACKAGES += \
   libgesture \
   libActivityInstant
   
-#ZenUI set
-PRODUCT_PACKAGES += \
-  PCLinkManager \
-  AsusCalculator \
-  AsusCamera \
-  SMMI_TEST \
-  AsusKeyboard \
-  3CToolbox \
-  PCLinkBinary \
-  ASUSBrowser \
-  AsusDrawRes \
-  ASUSGallery \
-  ASUSGalleryBurst \
-  OemTelephonyApp \
-  SARManager \
-  SensorCal \
-  SepService \
-  CWSClientService \
-  Themer \
-  ZooperWidget \
-  ICEsoundService
 
 #ituxd for intel thermal management
 ENABLE_ITUXD := true
@@ -426,6 +424,77 @@ DEVICE_PACKAGE_OVERLAYS := \
   device/asus/a500cg/overlay
   
 
+#libenc
+PRODUCT_PACKAGES += \
+  libenc
+
+#Skia
+PRODUCT_PACKAGES += \
+  libI420colorconvert \
+  libasfextractor \
+  libskia_ext \
+
+#ISV
+PRODUCT_PACKAGES += \
+  libisv_omx_core
+
+#Intel mult-thread
+PRODUCT_PACKAGES += \
+  libthreadedsource
+
+#Video editor
+PRODUCT_PACKAGES += \
+  libvavideodecoder \
+  libvideoeditor_stagefrightshells_intel \
+  liblvpp_intel \
+  libvss_intel
+
+#Intel Jpeg
+PRODUCT_PACKAGES += \
+  libjpeg-turbo \
+  libjpeg-turbo-static
+
+#Intel sensorhub
+PRODUCT_PACKAGES += \
+  sensorhubd \
+  libsensorhub  \
+  sensorhub_client \
+  calibration \
+  event_notification
+
+#libstagefrighthw
+PRODUCT_PACKAGES += \
+  libstagefrighthw
+
+#libaudio_hal
+PRODUCT_PACKAGES += \
+  libactive_value_set \
+  active_value_set_host \
+  libkeyvaluepairs \
+  libkeyvaluepairs_host \
+  libstream_static_host \
+  libstream_static \
+  libparametermgr_static_host \
+  libparametermgr_static \
+  libhalaudiodump \
+  libhalaudiodump_host \
+  libaudioplatformstate \
+  route_criteria.conf \
+  audio.routemanager \
+  audio.routemanager.includes \
+  libsamplespec_static_host \
+  libsamplespec_static \
+  audio_policy.$(TARGET_DEVICE) \
+  libaudioconversion_static_host \
+  libaudioconversion_static \
+  liblpepreprocessing \
+  liblpepreprocessinghelper \
+  liblpepreprocessinghelper_host \
+  audio_hal_configurable \
+  audio.primary.$(TARGET_DEVICE) \
+  libaudio_stream_manager_static_host \
+  libaudiohw_intel \
+  libaudiohw_intel_host
 
 ############################### property ##########################
 
@@ -434,9 +503,9 @@ DEVICE_PACKAGE_OVERLAYS := \
 # The extended JNI checks will cause the system to run more slowly, but they can spot a variety of nasty bugs
 # before they have a chance to cause problems.
 # Default=true for development builds, set by android buildsystem.
-#PRODUCT_PROPERTY_DEFAULTOVERRIDES += \
-#    ro.kernel.android.checkjni=0 \
-#    dalvik.vm.checkjni=false
+PRODUCT_PROPERTY_DEFAULTOVERRIDES += \
+    ro.kernel.android.checkjni=0 \
+    dalvik.vm.checkjni=false
 
 ADDITIONAL_DEFAULT_PROPERTIES += \
   ro.debuggable=1 \
@@ -445,19 +514,22 @@ ADDITIONAL_DEFAULT_PROPERTIES += \
   ro.adb.secure=0 \
   persist.sys.adb.root=1 \
   persist.sys.root_access=3
-#  wifi.version.driver=5.90.195.89.38 \
-#  gps.version.driver=6.19.6.216527 \
-#  bt.version.driver=V10.00.01 \
+  wifi.version.driver=5.90.195.89.38 \
+  gps.version.driver=6.19.6.216527 \
+  bt.version.driver=V10.00.01 \
 
 PRODUCT_PROPERTY_OVERRIDES += \
   ro.dalvik.vm.isa.arm=x86 \
   ro.enable.native.bridge.exec=1
-  
-DEX2OAT_TARGET_INSTRUCTION_SET_FEATURES := ssse3 movbe
-ADDITIONAL_DEFAULT_PROPERTIES += dalvik.vm.isa.x86.features=ssse3,movbe 
-  
+
 # set USB OTG enabled to add support for USB storage type
 PRODUCT_PROPERTY_OVERRIDES += persist.sys.isUsbOtgEnabled=1
 
 # Set default network type to LTE/GSM/WCDMA (9)
 PRODUCT_PROPERTY_OVERRIDES += ro.telephony.default_network=0
+
+
+# setup dalvik vm configs.
+$(call inherit-product, frameworks/native/build/phone-xhdpi-2048-dalvik-heap.mk)
+#$(call inherit-product-if-exists, vendor/asus/a500cg/a500cg-vendor-blobs.mk)
+#$(call inherit-product-if-exists, vendor/google/gapps/gapps.mk)

@@ -118,6 +118,7 @@ WIFI_DRIVER_MODULE_ARG 			:= "iface_name=wlan0 firmware_path=/system/etc/firmwar
 # Bluetooth
 BOARD_HAVE_BLUETOOTH := true
 BOARD_HAVE_BLUETOOTH_BCM := true
+BLUEDROID_ENABLE_V4L2 := true
 
 
 PRODUCT_DEFAULT_PROPERTY_OVERRIDES += ro.zygote=zygote32
@@ -263,26 +264,30 @@ BOARD_HAS_LARGE_FILESYSTEM := true
 #    untrusted_app.te
 
 # Build From source
+ENABLE_IMG_GRAPHICS := true
+#ENABLE_GEN_GRAPHICS := true
 USE_INTEL_MDP := true
 BUILD_WITH_FULL_STAGEFRIGHT := true
-BOARD_USES_MRST_OMX := true
-BOARD_USES_WRS_OMXIL_CORE := true
 BOARD_USE_LIBVA_INTEL_DRIVER := true
 BOARD_USE_LIBVA := true
 BOARD_USE_LIBMIX := true
+USE_INTEL_VA := true
 INTEL_VA := true
-ENABLE_IMG_GRAPHICS := true
-# Enable Minikin text layout engine (will be the default soon)
-#USE_MINIKIN := true
-USE_MDS_LEGACY := true
-TARGET_HAS_MULTIPLE_DISPLAY := true
-#TARGET_HAS_ISV := true
-#USE_HW_VP8 := true
+USE_HW_VP8 := true
+#TARGET_HAS_MULTIPLE_DISPLAY := true
+USE_AVC_SHORT_FORMAT := true
+USE_SLICE_HEADER_PARSING := true
+USE_SW_MPEG4 := true
+
+#OMX-components
+BOARD_USES_MRST_OMX := true
+BOARD_USES_WRS_OMXIL_CORE := true
+TARGET_HAS_ISV := true
 
 # Rild
 # Radio
 BOARD_RIL_SUPPORTS_MULTIPLE_CLIENTS := true
-BOARD_RIL_CLASS := ../../../device/asus/T00F/ril
+BOARD_RIL_CLASS := ../../../device/asus/a500cg/ril
 SIM_COUNT := 2
 # Use Intel camera extras (HDR, face detection, panorama, etc.) by default
 USE_INTEL_CAMERA_EXTRAS := true
@@ -377,3 +382,15 @@ BOARD_HAVE_MODEM := true
 
 # Logcat use android kernel logger
 TARGET_USES_LOGD := false
+TARGET_HAVE_CWS := true
+
+#Enable exfat
+VOLD_ENABLE_EXFAT := true
+
+#ASF
+USE_INTEL_ASF_EXTRACTOR := true
+
+INTEL_FEATURE_DPTF := true
+
+SEMC_CFG_FM_SERVICE_TI := true
+SEMC_CFG_FM_SERVICE_TI_HW := true
