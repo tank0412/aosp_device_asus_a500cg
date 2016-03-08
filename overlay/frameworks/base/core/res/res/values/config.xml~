@@ -424,6 +424,7 @@
     <add-resource type="bool" name="config_uninstallable_preloaded_app"/>
     <bool name="config_uninstallable_preloaded_app">true</bool>
     <integer name="config_wifi_scan_interval_p2p_connected">360000</integer>
+    <integer name="config_wifi_scan_interval_wfd_connected">300000</integer>
     <!-- Whether UI for multi user should be shown -->
     <bool name="config_enableMultiUserUI">true</bool>
 
@@ -443,6 +444,7 @@
       Defines the system property to set for performance profile xe: sys.cpu.modes. Leave it
          blank if the device do not support performance profiles
 -->
+    <string name="config_perf_profile_prop">sys.perf.profile</string>
 
 <!--
      When config_perf_profile_prop is defined, this value MUST be the index of
@@ -450,6 +452,7 @@
          for "perf_profile_values" array. Leave it blank if the device do not support
          performance profiles
 -->
+    <string name="config_perf_profile_default_entry">1</string>
         <!-- Enable the option to check proximity sensor when deciding whether to
          turn the screen on
          NOTE ! - Enable for devices that have a fast response proximity sensor
@@ -459,7 +462,9 @@
 -->
     <bool name="config_powerDecoupleAutoSuspendModeFromDisplay">true</bool>
     <bool name="config_powerDecoupleInteractiveModeFromDisplay">true</bool>
-
+    <bool name="config_proximityCheckOnWake">true</bool>
+    <integer name="config_proximityCheckTimeout">100</integer>
+    <bool name="config_proximityCheckOnWakeEnabledByDefault">true</bool>
     <bool name="config_lidControlsSleep">true</bool>
     <integer name="config_lightSensorWarmupTime">0</integer>
     <!-- The list absolute paths of jar/apk files containing the device specific handlers,
@@ -510,6 +515,8 @@
          This needs to match the constants in
          policy/src/com/android/internal/policy/impl/PhoneWindowManager.java
     -->
+    <integer name="config_longPressOnMenuBehavior">2</integer>
+
     <!-- Control the behavior when the user long presses the app switch button.
             0 - Nothing
             1 - Menu key
@@ -520,6 +527,8 @@
          This needs to match the constants in
          policy/src/com/android/internal/policy/impl/PhoneWindowManager.java
     -->
+    <integer name="config_longPressOnAppSwitchBehavior">1</integer>
+
         <!-- Configure Group Owner Intent used to perform WiFi Display P2P connection. -->
     <add-resource type="integer" name="config_groupOwnerIntentWifiDisplay"></add-resource>
     <integer name="config_groupOwnerIntentWifiDisplay">14</integer>
@@ -540,4 +549,5 @@
     <bool name="config_nonPollingWindowOrientation">false</bool>
 
     <!-- Configuartion to support SIM refresh in STK command for dual mode card.-->
+    <bool name="config_sim_refresh_for_dual_mode_card">true</bool>
 </resources>
