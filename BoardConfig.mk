@@ -1,33 +1,13 @@
-#
-# Copyright (C) 2016 The Android Open-Source Project
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
-
 include $(GENERIC_X86_CONFIG_MK)
-
-LOCAL_PATH := $(call my-dir)
-TARGET_SPECIFIC_HEADER_PATH := device/asus/a500cg/include
-
-include device/asus/a500cg/OptAtom.mk
+LOCAL_PATH := device/asus/a500cg
+TARGET_SPECIFIC_HEADER_PATH := $(LOCAL_PATH)/include
 
 BOARD_CREATE_MODPROBE_SYMLINK := true
-HAS_PREBUILT_KERNEL := false
-TARGET_PROVIDES_INIT_RC := false
+
 TARGET_NO_BOOTLOADER := true
 TARGET_NO_RADIOIMAGE := true
+#TARGET_NO_RECOVERY := false
 TARGET_NO_RECOVERY := true
-TARGET_NO_KERNEL := true
 TARGET_ARCH := x86
 TARGET_ARCH_VARIANT := x86-atom
 TARGET_CPU_ABI := x86
@@ -36,22 +16,32 @@ TARGET_CPU_ABI2 := armeabi-v7a
 TARGET_CPU_ABI_LIST := x86,armeabi-v7a,armeabi
 TARGET_CPU_ABI_LIST_32_BIT := x86,armeabi-v7a,armeabi
 TARGET_CPU_SMP := true
+#SIM_COUNT := 2
+#ANDROID_MULTI_SIM := true
+TARGET_RIL_DISABLE_STATUS_POLLING := true
 
-TARGET_BOARD_KERNEL_HEADERS := device/asus/a500cg/kernel-headers
+TARGET_BOARD_KERNEL_HEADERS := device/asus/a500cg/kernel-headers 
+
+# Bootloader
+TARGET_OTA_ASSERT_DEVICE := a500cg,ASUS_T00F
 
 INTEL_INGREDIENTS_VERSIONS := true
 LOCAL_CFLAGS += -DARCH_IA32
 TARGET_PRELINK_MODULE := false
 
-# Add some intel BOOTCLASSPATH
-PRODUCT_BOOT_JARS += com.intel.config com.asus.fm com.broadcom.bt
+#add some intel BOOTCLASSPATH
+#PRODUCT_BOOT_JARS += com.intel.config com.intel.multidisplay
+PRODUCT_BOOT_JARS += com.intel.multidisplay
 
-# Skip some proccess to speed up build
+
+# skip some proccess to speed up build
 BOARD_SKIP_ANDROID_DOC_BUILD := true
 BUILD_EMULATOR := false
 
-# Enable ARM codegen for x86 with Houdini
+# enable ARM codegen for x86 with Houdini
 BUILD_ARM_FOR_X86 := true
+
+TARGET_RECOVERY_FSTAB := device/asus/a500cg/ramdisk/fstab.redhookbay
 
 TARGET_BOARD_PLATFORM := clovertrail
 TARGET_BOOTLOADER_BOARD_NAME := clovertrail
@@ -70,28 +60,66 @@ BOARD_MALLOC_ALIGNMENT := 16
 # Appends path to ARM libs for Houdini
 PRODUCT_LIBRARY_PATH := $(PRODUCT_LIBRARY_PATH):/system/lib/arm
 
-BOARD_EGL_CFG := device/asus/a500cg/configs/egl.cfg
+# Kernel Build from source inline
+TARGET_PROVIDES_INIT_RC := true
+#MINIGZIP := out/host/darwin-x86/bin/minigzip
+#openssl: out/host/darwin-x86/bin/openssl
+#KERNEL_DIFFCONFIG := $(LOCAL_PATH)/a500cg_defconfig
+
+#$(info KERNEL_DIFFCONFIG ${KERNEL_DIFFCONFIG} )
+#KERNEL_MODULES_INSTALL := root
+#TARGET_KERNEL_BUILT_FROM_SOURCE := true
+TARGET_KERNEL_CROSS_COMPILE_PREFIX := x86_64-linux-android-
+#TARGET_KERNEL_CONFIG := a500cg_defconfig
+#TARGET_KERNEL_VARIANT_CONFIG := asusctp_hd_diffconfig
+TARGET_KERNEL_SOURCE := kernel/asus/a500cg
+TARGET_KERNEL_ARCH := x86
+
+# BOARD_CUSTOM_BOOTIMG_MK := device/asus/a500cg/intel-boot-tools/boot.mk
+# DEVICE_BASE_BOOT_IMAGE := device/asus/a500cg/blobs/boot.img
+BOARD_KERNEL_IMAGE_NAME := bzImage
+
+# prebuild source kernel
+BOARD_CUSTOM_BOOTIMG_MK := device/asus/a500cg/intel-boot-tools/boot.mk
+DEVICE_BASE_BOOT_IMAGE := device/asus/a500cg/blobs/boot.img
+DEVICE_BASE_RECOVERY_IMAGE := device/asus/a500cg/blobs/recovery-WW-3.23.40.52.img
+TARGET_PREBUILT_KERNEL := device/asus/a500cg/blobs/bzImage 
+
+# Kernel config (reference only)
+BOARD_KERNEL_BASE := 0x10000000
+BOARD_KERNEL_PAGESIZE := 2048
+cmdline_extra := watchdog.watchdog_thresh=60 androidboot.spid=xxxx:xxxx:xxxx:xxxx:xxxx:xxxx androidboot.serialno=01234567890123456789012345678901
+cmdline_extra1 := ip=50.0.0.2:50.0.0.1::255.255.255.0::usb0:on vmalloc=172M androidboot.wakesrc=05 androidboot.mode=main loglevel=8 
+cmdline_extra2 := loglevel=8 kmemleak=off androidboot.bootmedia=sdcard androidboot.hardware=redhookbay androidboot.selinux=permissive
+BOARD_KERNEL_CMDLINE := init=/init pci=noearly console=logk0 earlyprintk=nologger  $(cmdline_extra)  $(cmdline_extra1)  $(cmdline_extra2) 
+
+BOARD_EGL_CFG := $(LOCAL_PATH)/configs/egl.cfg
 BOARD_EGL_WORKAROUND_BUG_10194508 := true
 TARGET_RUNNING_WITHOUT_SYNC_FRAMEWORK := true
 
 # Enable dex-preoptimization to speed up first boot sequence
-WITH_DEXPREOPT := true
+ifeq ($(WITH_DEXPREOPT),)
+  WITH_DEXPREOPT := true
+endif
 
-# Wi-Fi
-BOARD_WLAN_DEVICE := bcmdhd
-BOARD_WPA_SUPPLICANT_PRIVATE_LIB := lib_driver_cmd_bcmdhd
-BOARD_HOSTAPD_PRIVATE_LIB := lib_driver_cmd_bcmdhd
-WPA_SUPPLICANT_VERSION := VER_0_8_X
-BOARD_WPA_SUPPLICANT_DRIVER := NL80211
-BOARD_HOSTAPD_DRIVER := NL80211
-WIFI_DRIVER_FW_PATH_PARAM := "/sys/module/bcm43362/parameters/firmware_path"
-WIFI_DRIVER_FW_PATH_AP    := "/system/etc/firmware/fw_bcmdhd_43362_apsta.bin"
-WIFI_DRIVER_FW_PATH_STA   := "/system/etc/firmware/fw_bcmdhd_43362.bin"
-WIFI_DRIVER_MODULE_ARG := "iface_name=wlan0 firmware_path=/system/etc/firmware/fw_bcmdhd_43362.bin"
+# Wifi
+BOARD_WLAN_DEVICE 			:= bcmdhd
+BOARD_WPA_SUPPLICANT_PRIVATE_LIB 	:= lib_driver_cmd_bcmdhd
+BOARD_HOSTAPD_PRIVATE_LIB        	:= lib_driver_cmd_bcmdhd
+WPA_SUPPLICANT_VERSION 			:= VER_0_8_X
+BOARD_WPA_SUPPLICANT_DRIVER 		:= NL80211
+BOARD_HOSTAPD_DRIVER 			:= NL80211
+#WIFI_DRIVER_MODULE_PATH         	:= "/system/lib/modules/dhd.ko"
+WIFI_DRIVER_FW_PATH_PARAM 		:= "/sys/module/bcm43362/parameters/firmware_path"
+WIFI_DRIVER_FW_PATH_AP    		:= "/system/etc/firmware/fw_bcmdhd_43362_apsta.bin"
+WIFI_DRIVER_FW_PATH_STA   		:= "/system/etc/firmware/fw_bcmdhd_43362.bin"
+WIFI_DRIVER_MODULE_ARG 			:= "iface_name=wlan0 firmware_path=/system/etc/firmware/fw_bcmdhd_43362.bin"
 
 # Bluetooth
 BOARD_HAVE_BLUETOOTH := true
 BOARD_HAVE_BLUETOOTH_BCM := true
+BLUEDROID_ENABLE_V4L2 := true
+
 
 PRODUCT_DEFAULT_PROPERTY_OVERRIDES += ro.zygote=zygote32
 
@@ -104,11 +132,15 @@ ADDITIONAL_DEFAULT_PROPERTIES += \
 # NFC
 BOARD_HAVE_NFC := false
 
-# BINDER
+#BINDER
 TARGET_USES_64_BIT_BINDER := true
 
 # Audio
+BOARD_USES_ALSA_AUDIO := true
+BUILD_WITH_ALSA_UTILS := true
 BOARD_USES_TINY_ALSA_AUDIO := true
+BOARD_USES_AUDIO_HAL_XML := true
+BOARD_USES_AUDIO_HAL_CONFIGURABLE := true
 
 # DRM Protected Video
 BOARD_WIDEVINE_OEMCRYPTO_LEVEL := 1
@@ -119,6 +151,11 @@ BUILD_ARM_FOR_X86 := true
 
 # HW_Renderer
 USE_OPENGL_RENDERER := true
+BOARD_EGL_CFG := device/asus/a500cg/configs/egl.cfg
+BOARD_ALLOW_EGL_HIBERNATION := true
+TARGET_RUNNING_WITHOUT_SYNC_FRAMEWORK := true
+COMMON_GLOBAL_CFLAGS += -DFORCE_SCREENSHOT_CPU_PATH
+BOARD_EGL_WORKAROUND_BUG_10194508 := true
 
 # DPST
 INTEL_DPST := true
@@ -128,22 +165,18 @@ BOARD_USES_HWCOMPOSER := true
 
 # RILD
 RIL_SUPPORTS_SEEK := true
-BOARD_PROVIDES_LIBRIL := true
-BOARD_RIL_CLASS := ../../../device/asus/a500cg/ril/
-SIM_COUNT := 2
-ANDROID_MULTI_SIM := true
-TARGET_RIL_DISABLE_STATUS_POLLING := true
-ADDITIONAL_BUILD_PROPERTIES += ro.ril.status.polling.enable=0
 
 # GPS
 BOARD_HAVE_GPS := true
+GPS_CHIP_VENDOR := bcm
+GPS_CHIP := 4752
 
 # RMT_STORAGE
 BOARD_USES_LEGACY_MMAP := true
 
 ADDITIONAL_DEFAULT_PROPERTIES += \
     ro.sf.lcd_density=320 \
-    ro.opengles.version=196608 \
+    ro.opengles.version = 131072 \
     gsm.net.interface=rmnet0 \
     persist.system.at-proxy.mode=0 \
     ro.dalvik.vm.native.bridge=libhoudini.so \
@@ -155,41 +188,209 @@ ADDITIONAL_DEFAULT_PROPERTIES += \
 # Storage information
 BOARD_HAS_LARGE_FILESYSTEM := true
 
-# Reduce space taken by the journal
-BOARD_SYSTEMIMAGE_JOURNAL_SIZE := 0
-
 # Recovery global
-BOARD_RECOVERY_SWIPE := true
-BOARD_UMS_LUNFILE := "/sys/devices/virtual/android_usb/android0/f_mass_storage/lun/file"
+#TARGET_RECOVERY_INITRC := $(LOCAL_PATH)/ramdisk/init.recovery.redhookbay.rc
+#BOARD_RECOVERY_SWIPE := true
+#BOARD_UMS_LUNFILE := "/sys/devices/virtual/android_usb/android0/f_mass_storage/lun/file"
+
+# TWRP Recovery
+# update your twrp.fstab to recovery dir /etc/twrp.fstab
+#TW_NO_LEGACY_PROPS := true
+#RECOVERY_GRAPHICS_USE_LINELENGTH := true
+#TW_DISABLE_DOUBLE_BUFFERING_CHECK := true
+#TW_THEME := portrait_hdpi
+
+#TW_BRIGHTNESS_PATH := /sys/class/backlight/psb-bl/brightness
+#BOARD_HAS_NO_SELECT_BUTTON := true
+#BOARD_USE_CUSTOM_RECOVERY_FONT := \"roboto_15x24.h\"
+#TW_INCLUDE_CRYPTO := true
+#TW_INTERNAL_STORAGE_PATH := "/media/data/0"
+#TW_INTERNAL_STORAGE_MOUNT_POINT := "/data"
+#TW_EXTERNAL_STORAGE_PATH := "/external_sd"
+#TW_EXTERNAL_STORAGE_MOUNT_POINT := "external_sd"
+#TW_DEFAULT_EXTERNAL_STORAGE := true
+#TW_HAS_MTP := true
+#TW_NO_SCREEN_BLANK := true
+#TW_NO_SCREEN_TIMEOUT := true
+#TW_CUSTOM_BATTERY_PATH := /sys/class/power_supply/max170xx_battery
+#TW_BRIGHTNESS_PATH := /sys/class/backlight/psb-bl/brightness
+#TW_MAX_BRIGHTNESS := 255
+#TW_CUSTOM_POWER_BUTTON := 116
+#TARGET_USE_CUSTOM_LUN_FILE_PATH := "/sys/devices/virtual/android_usb/android0/f_mass_storage/lun/file"
+#TW_CUSTOM_CPU_TEMP_PATH := "/sys/devices/virtual/thermal/thermal_zone0/temp"
+#TWRP_EVENT_LOGGING := false
+
+
+
+# SELinux
+#HAVE_SELINUX := true
+#BOARD_SEPOLICY_DIRS += device/asus/a500cg/sepolicy
+
+#BOARD_SEPOLICY_UNION += \
+#    file_contexts \
+#    seapp_contexts \
+#    property_contexts \
+#    service_contexts \
+#    file.te \
+#    device.te \
+#    ecryptfs.te \
+#    genfs_contexts \
+#    vold.te \
+#    surfaceflinger.te \
+#    zygote.te \
+#    pvrsrvctl.te \
+#    bluetooth.te \
+#    surfaceflinger.te \
+#    system_app.te \
+#    file.te \
+#    shell.te \
+#    mediaserver.te \
+#    nvm_server.te \
+#    su.te   \
+#    system_server.te \
+#    service.te \
+#    mmgr.te \
+#    init.te \
+#   kernel.te \
+#    sysfs_uart_power_ctrl.te \
+#    ueventd.te \
+#   logcat.te \
+#    netd.te \
+#    wpa.te \
+#    rild.te \
+#    akmd.te \
+#    gauge.te \
+#    customize.te \
+#    untrusted_app.te
 
 # Build From source
+ENABLE_IMG_GRAPHICS := true
+#ENABLE_GEN_GRAPHICS := true
 USE_INTEL_MDP := true
 BUILD_WITH_FULL_STAGEFRIGHT := true
-BOARD_USES_MRST_OMX := true
-BOARD_USES_WRS_OMXIL_CORE := true
 BOARD_USE_LIBVA_INTEL_DRIVER := true
 BOARD_USE_LIBVA := true
 BOARD_USE_LIBMIX := true
+USE_INTEL_VA := true
 INTEL_VA := true
-ENABLE_IMG_GRAPHICS := true
+USE_HW_VP8 := true
+#TARGET_HAS_MULTIPLE_DISPLAY := true
+USE_AVC_SHORT_FORMAT := true
+USE_SLICE_HEADER_PARSING := true
+USE_SW_MPEG4 := true
 
-# Enable Minikin text layout engine (will be the default soon)
-USE_MINIKIN := true
-USE_MDS_LEGACY := true
-TARGET_HAS_MULTIPLE_DISPLAY := true
+#OMX-components
+BOARD_USES_MRST_OMX := true
+BOARD_USES_WRS_OMXIL_CORE := true
+TARGET_HAS_ISV := true
 
-#TARGET_HAS_ISV := true
-#USE_HW_VP8 := true
+# Rild
+# Radio
+BOARD_RIL_SUPPORTS_MULTIPLE_CLIENTS := true
+BOARD_RIL_CLASS := ../../../device/asus/a500cg/ril
+SIM_COUNT := 2
+# Use Intel camera extras (HDR, face detection, panorama, etc.) by default
+USE_INTEL_CAMERA_EXTRAS := true
+
+# select libcamera2 as the camera HAL
+USE_CAMERA_HAL2 := true
+USE_CSS_1_5 := true
+USE_CSS_2_0 := true
+USE_CSS_2_1 := true
+USE_INTEL_METABUFFER := true
+USE_INTEL_JPEG := true
+USE_CAMERA_IO_BREAKDOWN := true
+
+
+# disable the new V3 HAL by default so it can be added to the tree without conflicts
+# it will be enabled in selected platforms
+USE_CAMERA_HAL_3 := false
+
+# Set USE_VIDEO_EFFECT to 'false' to unsupport live face effect. And Set OMX Component Input Buffer Count to 2.
+USE_VIDEO_EFFECT := true
+
+# Do not use shared object of ia_face by default
+USE_SHARED_IA_FACE := false
+
+# Use multi-thread for acceleration
 USE_INTEL_MULT_THREAD := true
-BOARD_CAMERA_PLUGIN := vendor/intel/hardware/camera_extension
+
+# Use Async OMX for http streaming
+USE_ASYNC_OMX_CLIENT := true
+
+# Use panorama v1.0 by default
+IA_PANORAMA_VERSION := 1.0
+
+# Turn on GR_STATIC_RECT_VB flag in skia to boost performance
+TARGET_USE_GR_STATIC_RECT_VB := true
+
+ifeq ($(TARGET_RIL_DISABLE_STATUS_POLLING),true)
+ADDITIONAL_BUILD_PROPERTIES += ro.ril.status.polling.enable=0
+endif
+
+# Libm
+#TARGET_USE_PRIVATE_LIBM := true
+
+#TARGET_HAS_MULTIPLE_DISPLAY := true
+USE_MDS_LEGACY := true
+#BOARD_CAMERA_PLUGIN := vendor/intel/hardware/camera_extension
+#include $(COMMON_PATH)/BoardConfig.mk
+BOARD_USES_CYANOGEN_HARDWARE := true
 
 # HWcomposer
-#INTEL_HWC := true
-#TARGET_SUPPORT_HWC_SYS_LAYER := true
+INTEL_HWC := true
+INTEL_WIDI := false
+TARGET_SUPPORT_HWC_SYS_LAYER := true
+TARGET_HAS_MULTIPLE_DISPLAY := true
 
-# Fix unknown Serial Number
-TARGET_IGNORE_RO_BOOT_SERIALNO := true
+INTEL_FEATURE_AWARESERVICE := true
+#PRODUCT_BOOT_JARS += com.intel.aware.awareservice
 
-# Double-Tap-To-Wake
-BOARD_HARDWARE_CLASS := device/asus/a500cg/cmhw
-BOARD_USES_CYANOGEN_HARDWARE := true
+# System's VSYNC phase offsets in nanoseconds
+VSYNC_EVENT_PHASE_OFFSET_NS := 7500000
+SF_VSYNC_EVENT_PHASE_OFFSET_NS := 5000000
+
+# Allow HWC to perform a final CSC on virtual displays
+TARGET_FORCE_HWC_FOR_VIRTUAL_DISPLAYS := true
+NUM_FRAMEBUFFER_SURFACE_BUFFERS := 3
+INTEL_WIDI := true
+HWUI_IMG_FBO_CACHE_OPTIM := true
+TARGET_INTEL_HWCOMPOSER_FORCE_ONLY_ONE_RGB_LAYER := true
+BOARD_USE_VIBRATOR := true
+#BOARD_USES_VIBRATOR_HAL_XML := true
+
+#USE_GENERAL_SENSOR_DRIVER := true
+# Lights
+TARGET_PROVIDES_LIBLIGHT := true
+
+BOARD_HAVE_AUDIENCE := true
+
+#Rapid-ril
+M2_VT_FEATURE_ENABLED := true
+M2_CALL_FAILED_CAUSE_FEATURE_ENABLED := true
+#M2_PIN_RETRIES_FEATURE_ENABLED := true
+BOARD_HAVE_IFX6265 := true
+M2_GET_SIM_SMS_STORAGE_ENABLED := true
+
+#WebRTC
+ENABLE_WEBRTC := true
+
+#ALAC CODEC
+USE_FEATURE_ALAC := true
+
+BOARD_HAVE_MODEM := true
+
+# Logcat use android kernel logger
+TARGET_USES_LOGD := false
+TARGET_HAVE_CWS := true
+
+#Enable exfat
+VOLD_ENABLE_EXFAT := true
+
+#ASF
+USE_INTEL_ASF_EXTRACTOR := true
+
+INTEL_FEATURE_DPTF := true
+
+SEMC_CFG_FM_SERVICE_TI := true
+SEMC_CFG_FM_SERVICE_TI_HW := true

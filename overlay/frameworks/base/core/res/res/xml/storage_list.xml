@@ -35,7 +35,7 @@
              android:allowMassStorage="true" />
 
     <!-- external USB OTG storage -->
-    <storage android:mountPoint="/storage/USBdisk1"
+    <storage android:mountPoint="/storage/usbdisk"
              android:storageDescription="@string/storage_usb"
              android:primary="false"
              android:emulated="false"
