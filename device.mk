@@ -77,28 +77,55 @@ PRODUCT_PACKAGES += \
 
 # Audio
 PRODUCT_PACKAGES += \
-  libtinycompress \
-  libtinyalsa \
-  audio.a2dp.default \
-  audio.primary.default \
-  audio.r_submix.default \
-  audio.usb.default \
-  libaudioutils
+	libaudioutils
+#	libtinycompress \
+#	libtinyalsa \
+#	audio.a2dp.default \
+#	audio.primary.default \
+#	audio.r_submix.default \
+#	audio.usb.default \
+#	libtinyalsa-subsystem \
+# Stagefright
+#PRODUCT_PACKAGES += \
+#    libstagefrighthw
 
+# omx common
 PRODUCT_PACKAGES += \
-  libstagefrighthw \
-  libwrs_omxil_core_pvwrapped \
-  libOMXVideoDecoderAVC \
-  libOMXVideoDecoderH263 \
-  libOMXVideoDecoderMPEG4 \
-  libOMXVideoDecoderWMV \
-  libOMXVideoEncoderAVC \
-  libOMXVideoEncoderH263 \
-  libOMXVideoEncoderMPEG4 \
-  libmixvbp \
-  libmixvbp_h264 \
-  libmixvbp_mpeg4 \
-  libmixvbp_vc1
+	libwrs_omxil_common \
+	libwrs_omxil_core_pvwrapped
+
+# video decoder encoder
+PRODUCT_PACKAGES += \
+	libOMXVideoDecoderAVC \
+	libOMXVideoDecoderH263 \
+	libOMXVideoDecoderMPEG4 \
+	libOMXVideoDecoderWMV \
+	libOMXVideoEncoderAVC \
+	libOMXVideoEncoderH263 \
+	libOMXVideoEncoderMPEG4 \
+	libOMXVideoDecoderAVCSecure
+
+# libwsbm
+PRODUCT_PACKAGES += \
+	libwsbm
+
+# libmix
+#PRODUCT_PACKAGES += \
+#	libmixvbp \
+#	libmixvbp_h264 \
+#	libmixvbp_h264secure \
+#	libmixvbp_mpeg4 \
+#	libmixvbp_vc1
+
+# image decoder
+#PRODUCT_PACKAGES += \
+#	libmix_imagedecoder \
+#	libmix_imageencoder
+
+# Media SDK and OMX IL components
+PRODUCT_PACKAGES += \
+	msvdx_bin \
+	topaz_bin
 
 PRODUCT_COPY_FILES += \
   device/asus/a500cg/configs/platform.xml:system/etc/permissions/platform.xml \
