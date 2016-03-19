@@ -1,563 +1,396 @@
-#
-# Copyright (C) 2013 The Android Open-Source Project
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
-
+include $(GENERIC_X86_CONFIG_MK)
 LOCAL_PATH := device/asus/a500cg
+TARGET_SPECIFIC_HEADER_PATH := $(LOCAL_PATH)/include
 
-$(call inherit-product, device/asus/a500cg/intel-boot-tools/Android.mk)
+BOARD_CREATE_MODPROBE_SYMLINK := true
 
-$(call inherit-product, $(SRC_TARGET_DIR)/product/languages_full.mk)
+TARGET_NO_BOOTLOADER := true
+TARGET_NO_RADIOIMAGE := true
+#TARGET_NO_RECOVERY := false
+TARGET_NO_RECOVERY := true
+TARGET_ARCH := x86
+TARGET_ARCH_VARIANT := x86-atom
+TARGET_CPU_ABI := x86
+TARGET_CPU_VARIANT := x86
+TARGET_CPU_ABI2 := armeabi-v7a
+TARGET_CPU_ABI_LIST := x86,armeabi-v7a,armeabi
+TARGET_CPU_ABI_LIST_32_BIT := x86,armeabi-v7a,armeabi
+TARGET_CPU_SMP := true
+#SIM_COUNT := 2
+#ANDROID_MULTI_SIM := true
+TARGET_RIL_DISABLE_STATUS_POLLING := true
 
-ifeq ($(TARGET_PREBUILT_KERNEL),)
-	LOCAL_KERNEL := $(LOCAL_PATH)/blobs/bzImage
-else
-	LOCAL_KERNEL := $(TARGET_PREBUILT_KERNEL)
+TARGET_BOARD_KERNEL_HEADERS := device/asus/a500cg/kernel-headers 
+
+# Bootloader
+TARGET_OTA_ASSERT_DEVICE := a500cg,ASUS_T00F
+
+INTEL_INGREDIENTS_VERSIONS := true
+LOCAL_CFLAGS += -DARCH_IA32
+TARGET_PRELINK_MODULE := false
+
+#add some intel BOOTCLASSPATH
+#PRODUCT_BOOT_JARS += com.intel.config com.intel.multidisplay
+PRODUCT_BOOT_JARS += com.intel.multidisplay
+
+
+# skip some proccess to speed up build
+BOARD_SKIP_ANDROID_DOC_BUILD := true
+BUILD_EMULATOR := false
+
+# enable ARM codegen for x86 with Houdini
+BUILD_ARM_FOR_X86 := true
+
+TARGET_RECOVERY_FSTAB := device/asus/a500cg/ramdisk/fstab.redhookbay
+
+TARGET_BOARD_PLATFORM := clovertrail
+TARGET_BOOTLOADER_BOARD_NAME := clovertrail
+TARGET_USERIMAGES_USE_EXT4 := true
+BOARD_SYSTEMIMAGE_PARTITION_SIZE := 1363148800
+BOARD_FLASH_BLOCK_SIZE := 131072
+
+TARGET_RECOVERY_PIXEL_FORMAT := "BGRA_8888"
+
+# Use dlmalloc
+MALLOC_IMPL := dlmalloc
+
+# Malloc Alignment
+BOARD_MALLOC_ALIGNMENT := 16
+
+# Appends path to ARM libs for Houdini
+PRODUCT_LIBRARY_PATH := $(PRODUCT_LIBRARY_PATH):/system/lib/arm
+
+# Kernel Build from source inline
+TARGET_PROVIDES_INIT_RC := true
+#MINIGZIP := out/host/darwin-x86/bin/minigzip
+#openssl: out/host/darwin-x86/bin/openssl
+#KERNEL_DIFFCONFIG := $(LOCAL_PATH)/a500cg_defconfig
+
+#$(info KERNEL_DIFFCONFIG ${KERNEL_DIFFCONFIG} )
+#KERNEL_MODULES_INSTALL := root
+#TARGET_KERNEL_BUILT_FROM_SOURCE := true
+TARGET_KERNEL_CROSS_COMPILE_PREFIX := x86_64-linux-android-
+#TARGET_KERNEL_CONFIG := a500cg_defconfig
+#TARGET_KERNEL_VARIANT_CONFIG := asusctp_hd_diffconfig
+TARGET_KERNEL_SOURCE := kernel/asus/a500cg
+TARGET_KERNEL_ARCH := x86
+
+# BOARD_CUSTOM_BOOTIMG_MK := device/asus/a500cg/intel-boot-tools/boot.mk
+# DEVICE_BASE_BOOT_IMAGE := device/asus/a500cg/blobs/boot.img
+BOARD_KERNEL_IMAGE_NAME := bzImage
+
+# prebuild source kernel
+BOARD_CUSTOM_BOOTIMG_MK := device/asus/a500cg/intel-boot-tools/boot.mk
+DEVICE_BASE_BOOT_IMAGE := device/asus/a500cg/blobs/boot.img
+DEVICE_BASE_RECOVERY_IMAGE := device/asus/a500cg/blobs/recovery-WW-3.23.40.52.img
+TARGET_PREBUILT_KERNEL := device/asus/a500cg/blobs/bzImage 
+
+# Kernel config (reference only)
+BOARD_KERNEL_BASE := 0x10000000
+BOARD_KERNEL_PAGESIZE := 2048
+cmdline_extra := watchdog.watchdog_thresh=60 androidboot.spid=xxxx:xxxx:xxxx:xxxx:xxxx:xxxx androidboot.serialno=01234567890123456789012345678901
+cmdline_extra1 := ip=50.0.0.2:50.0.0.1::255.255.255.0::usb0:on vmalloc=172M androidboot.wakesrc=05 androidboot.mode=main loglevel=8 
+cmdline_extra2 := loglevel=8 kmemleak=off androidboot.bootmedia=sdcard androidboot.hardware=redhookbay androidboot.selinux=permissive
+BOARD_KERNEL_CMDLINE := init=/init pci=noearly console=logk0 earlyprintk=nologger  $(cmdline_extra)  $(cmdline_extra1)  $(cmdline_extra2) 
+
+BOARD_EGL_CFG := $(LOCAL_PATH)/configs/egl.cfg
+BOARD_EGL_WORKAROUND_BUG_10194508 := true
+TARGET_RUNNING_WITHOUT_SYNC_FRAMEWORK := true
+
+# Enable dex-preoptimization to speed up first boot sequence
+ifeq ($(WITH_DEXPREOPT),)
+  WITH_DEXPREOPT := true
 endif
 
-PRODUCT_COPY_FILES += \
-    $(LOCAL_KERNEL):kernel
-
-# This device is xhdpi.  However the platform doesn't
-# currently contain all of the bitmaps at xhdpi density so
-# we do this little trick to fall back to the hdpi version
-# if the xhdpi doesn't exist.
-PRODUCT_AAPT_CONFIG := normal hdpi xhdpi
-PRODUCT_AAPT_PREF_CONFIG := xhdpi
-
-DEVICE_BASE_BOOT_IMAGE := $(LOCAL_PATH)/blobs/boot.img
-DEVICE_BASE_RECOVERY_IMAGE := $(LOCAL_PATH)/blobs/recovery-ww-2.20.40.13.img
-BOARD_CUSTOM_BOOTIMG_MK := $(LOCAL_PATH)/intel-boot-tools/boot.mk
-
-# specific management of audio_policy.conf
-PRODUCT_COPY_FILES += \
-    device/asus/a500cg/configs/media_codecs.xml:system/etc/media_codecs.xml \
-    device/asus/a500cg/audio_policy.conf:system/etc/audio_policy.conf \
-    frameworks/av/media/libstagefright/data/media_codecs_google_audio.xml:system/etc/media_codecs_google_audio.xml \
-    frameworks/av/media/libstagefright/data/media_codecs_google_telephony.xml:system/etc/media_codecs_google_telephony.xml \
-    frameworks/av/media/libstagefright/data/media_codecs_google_video.xml:system/etc/media_codecs_google_video.xml
-
-PRODUCT_COPY_FILES += \
-    device/asus/a500cg/config_lto.sh:system/etc/init.d/01config_lto
-
-
-# Intel Display
-PRODUCT_PROPERTY_OVERRIDES += \
-    ro.sf.lcd_density=320
-
-# Modules (currently from ASUS)
-PRODUCT_COPY_FILES += \
-    $(call find-copy-subdir-files,*,device/asus/a500cg/ramdisk,root)
-
-# Binary to be replaced with source code ..
-PRODUCT_COPY_FILES += \
-  device/asus/a500cg/twrp.fstab:recovery/root/etc/twrp.fstab
-
 # Wifi
-PRODUCT_PACKAGES += \
-  libwpa_client \
-  hostapd \
-  dhcpcd.conf \
-  wpa_supplicant \
-  wpa_supplicant.conf \
-  libwifi-hal-bcm \
-  lib_driver_cmd_bcmdhd \
-  iw
+BOARD_WLAN_DEVICE 			:= bcmdhd
+BOARD_WPA_SUPPLICANT_PRIVATE_LIB 	:= lib_driver_cmd_bcmdhd
+BOARD_HOSTAPD_PRIVATE_LIB        	:= lib_driver_cmd_bcmdhd
+WPA_SUPPLICANT_VERSION 			:= VER_0_8_X
+BOARD_WPA_SUPPLICANT_DRIVER 		:= NL80211
+BOARD_HOSTAPD_DRIVER 			:= NL80211
+#WIFI_DRIVER_MODULE_PATH         	:= "/system/lib/modules/dhd.ko"
+WIFI_DRIVER_FW_PATH_PARAM 		:= "/sys/module/bcm43362/parameters/firmware_path"
+WIFI_DRIVER_FW_PATH_AP    		:= "/system/etc/firmware/fw_bcmdhd_43362_apsta.bin"
+WIFI_DRIVER_FW_PATH_STA   		:= "/system/etc/firmware/fw_bcmdhd_43362.bin"
+WIFI_DRIVER_MODULE_ARG 			:= "iface_name=wlan0 firmware_path=/system/etc/firmware/fw_bcmdhd_43362.bin"
 
-# Audio
-PRODUCT_PACKAGES += \
-	libaudioutils
-#	libtinycompress \
-#	libtinyalsa \
-#	audio.a2dp.default \
-#	audio.primary.default \
-#	audio.r_submix.default \
-#	audio.usb.default \
-#	libtinyalsa-subsystem \
-
-# Stagefright
-#PRODUCT_PACKAGES += \
-#    libstagefrighthw
-
-# omx common
-PRODUCT_PACKAGES += \
-	libwrs_omxil_common \
-	libwrs_omxil_core_pvwrapped
-
-# video decoder encoder
-PRODUCT_PACKAGES += \
-	libOMXVideoDecoderAVC \
-	libOMXVideoDecoderH263 \
-	libOMXVideoDecoderMPEG4 \
-	libOMXVideoDecoderWMV \
-	libOMXVideoEncoderAVC \
-	libOMXVideoEncoderH263 \
-	libOMXVideoEncoderMPEG4 \
-	libOMXVideoDecoderAVCSecure
-
-# libwsbm
-PRODUCT_PACKAGES += \
-	libwsbm
-
-# libmix
-#PRODUCT_PACKAGES += \
-#	libmixvbp \
-#	libmixvbp_h264 \
-#	libmixvbp_h264secure \
-#	libmixvbp_mpeg4 \
-#	libmixvbp_vc1
-
-# image decoder
-#PRODUCT_PACKAGES += \
-#	libmix_imagedecoder \
-#	libmix_imageencoder
-
-# Media SDK and OMX IL components
-PRODUCT_PACKAGES += \
-	msvdx_bin \
-	topaz_bin
-
-PRODUCT_COPY_FILES += \
-  device/asus/a500cg/configs/platform.xml:system/etc/permissions/platform.xml \
-  frameworks/native/data/etc/handheld_core_hardware.xml:system/etc/permissions/handheld_core_hardware.xml \
-  frameworks/native/data/etc/android.hardware.camera.autofocus.xml:system/etc/permissions/android.hardware.camera.autofocus.xml \
-  frameworks/native/data/etc/android.hardware.camera.flash-autofocus.xml:system/etc/permissions/android.hardware.camera.flash-autofocus.xml \
-  frameworks/native/data/etc/android.hardware.camera.front.xml:system/etc/permissions/android.hardware.camera.front.xml \
-  frameworks/native/data/etc/android.hardware.camera.xml:system/etc/permissions/android.hardware.camera.xml \
-  frameworks/native/data/etc/android.hardware.location.gps.xml:system/etc/permissions/android.hardware.location.xml \
-  frameworks/native/data/etc/android.hardware.location.xml:system/etc/permissions/android.hardware.location.gps.xml \
-  frameworks/native/data/etc/android.hardware.wifi.xml:system/etc/permissions/android.hardware.wifi.xml \
-  frameworks/native/data/etc/android.hardware.sensor.accelerometer.xml:system/etc/permissions/android.hardware.sensor.accelerometer.xml \
-  frameworks/native/data/etc/android.hardware.sensor.gyroscope.xml:system/etc/permissions/android.hardware.sensor.gyroscope.xml \
-  frameworks/native/data/etc/android.hardware.sensor.compass.xml:system/etc/permissions/android.hardware.sensor.compass.xml \
-  frameworks/native/data/etc/android.hardware.sensor.light.xml:system/etc/permissions/android.hardware.sensor.light.xml \
-  frameworks/native/data/etc/android.hardware.sensor.proximity.xml:system/etc/permissions/android.hardware.sensor.proximity.xml \
-  frameworks/native/data/etc/android.hardware.telephony.gsm.xml:system/etc/permissions/android.hardware.telephony.gsm.xml \
-  frameworks/native/data/etc/android.hardware.touchscreen.multitouch.distinct.xml:system/etc/permissions/android.hardware.touchscreen.multitouch.distinct.xml \
-  frameworks/native/data/etc/android.hardware.touchscreen.multitouch.jazzhand.xml:system/etc/permissions/android.hardware.touchscreen.multitouch.jazzhand.xml \
-  frameworks/native/data/etc/android.hardware.touchscreen.multitouch.xml:system/etc/permissions/android.hardware.touchscreen.multitouch.xml \
-  frameworks/native/data/etc/android.hardware.usb.accessory.xml:system/etc/permissions/android.hardware.usb.accessory.xml \
-  frameworks/native/data/etc/android.hardware.touchscreen.xml:system/etc/permissions/android.hardware.touchscreen.xml \
-  frameworks/native/data/etc/android.hardware.usb.host.xml:system/etc/permissions/android.hardware.usb.host.xml \
-  frameworks/native/data/etc/android.hardware.wifi.direct.xml:system/etc/permissions/android.hardware.wifi.direct.xml \
-  frameworks/native/data/etc/android.hardware.wifi.xml:system/etc/permissions/android.hardware.wifi.xml \
-  frameworks/native/data/etc/android.software.sip.voip.xml:system/etc/permissions/android.software.sip.voip.xml \
-  frameworks/native/data/etc/android.software.webview.xml:system/etc/permissions/android.software.webview.xml \
-  frameworks/native/data/etc/android.hardware.bluetooth_le.xml:system/etc/permissions/android.hardware.bluetooth_le.xml
-
-PRODUCT_COPY_FILES += \
-  $(call find-copy-subdir-files,*,device/asus/a500cg/include,obj/include)
-
-PRODUCT_PROPERTY_OVERRIDES += \
-ro.telephony.ril_class=Zenfone5RIL
-
-PRODUCT_PROPERTY_OVERRIDES += \
-  ro.sf.lcd_density=320 \
-  ro.opengles.version = 131072
-
-PRODUCT_PACKAGES += \
-  audio.a2dp.default \
-  audio.usb.default \
-  audio.r_submix.default \
-  audio.usb.default \
-  audio.primary.default \
-
-PRODUCT_PACKAGES += \
-  libhoudini \
-  houdini \
-  arm_dyn \
-  arm_exe
-#include vendor/intel/houdini/houdini.mk
-# usb
-PRODUCT_PACKAGES += \
-  com.android.future.usb.accessory
-
-COMBO_CHIP_VENDOR := bcm
-PRODUCT_PACKAGES += \
-  gps_bcm_4752 \
-  libflpso_proxy \
-  libflpso \
-  flp.a500cg \
-  gpsd \
-  wifi_bcm_4330 \
-  bt_bcm4330 \
-  gps.default \
-  gps.$(TARGET_DEVICE)
-
-# Keyhandler
-#PRODUCT_PACKAGES += \
-    com.cyanogenmod.keyhandler \
-    CMActions
-
-# Filesystem management tools
-PRODUCT_PACKAGES += \
-  e2fsck \
-  tune2fs \
-  resize2fs
-
-PRODUCT_PACKAGES += \
-  Stk
-
-PRODUCT_PACKAGES += \
-  libmultidisplay \
-  libmultidisplayjni \
-  com.intel.multidisplay.xml
-
-# library 
-PRODUCT_PACKAGES += \
-  libtinyxml \
-  minizip \
-  openssl \
-  pack_intel \
-  unpack_intel
-
-PRODUCT_PACKAGES += \
-  liboempartitioning_static \
-  libcgpt_static \
-  libintel_updater \
-  update_recovery
-
-PRODUCT_PACKAGES += \
-  link_modprobe
-
-PRODUCT_PACKAGES += \
-  libart-extension \
-  libartd-extension
-#include vendor/intel/art-extension/Android.mk
-
-#Intel-sensors family
-PRODUCT_PACKAGES += \
-  gps.a500cg
-
-#Intel-sensors family
-PRODUCT_PACKAGES += \
-  libhealthd.intel \
-
-PRODUCT_PACKAGES += \
-  sensors.a500cg \
-  libaccelerometersimplecalibration
-#include vendor/intel/hardware/sensors/Android.mk
-
-PRODUCT_PACKAGES += \
-  lights.a500cg 
-#include vendor/intel/hardware/liblights/Android.mk
-
-PRODUCT_PACKAGES += \
-  power.clovertrail
-#include hardware/intel/clovertrail/power/Android.mk
+# Bluetooth
+BOARD_HAVE_BLUETOOTH := true
+BOARD_HAVE_BLUETOOTH_BCM := true
+BLUEDROID_ENABLE_V4L2 := true
 
 
-# libcamera2
-PRODUCT_PACKAGES += \
-  camera.$(TARGET_DEVICE)
-  
-# lib audio.codec.offload
-#PRODUCT_PACKAGES += \
-#  audio.codec_offload.$(TARGET_DEVICE)
-  
-#Touchfilter
-PRODUCT_PACKAGES += \
-  libeventprocessing
-  
-PRODUCT_PACKAGES += \
-  libgesture \
-  libActivityInstant
-  
-
-#ituxd for intel thermal management
-ENABLE_ITUXD := true
-PRODUCT_PACKAGES += \
-  ituxd
-  
-# sbin/thermald
-PRODUCT_PACKAGES += \
-  thermald
-
-PRODUCT_PACKAGES += \
-  libproperty
-  
-PRODUCT_PACKAGES += \
-	libmorpho_image_stabilizer3 \
-	libtbd \
-	libtbd \
-	drvtool \
-	tbdtool \
-	telephony_scalability.xml \
-	libtcs \
-	libtcs \
-	CC6_ALL_BASIC_LIB \
-	CC6_UMIP_ACCESS \
-	libsepdrm \
-	libsepdrm \
-	libsecurity_api \
-	libdiskkeyencrypt \
-	libsecurity_api \
-	libsecurity_sectoken \
-	libsecurity_sectoken \
-	libmiscutils \
-	mediasdk_release_notes.pdf \
-	libmfxhw32 \
-	libmfx_omx_core \
-	libmfx_omx_components_hw \
-	libgabi++-mfx \
-	libstlport-mfx \
-	libmfx_mix_h264ve \
-	libstagefrighthw \
-	libjpegdec \
-	libjpeg_hw \
-	testjpegdec \
-	libva_videoencoder \
-	libintelmetadatabuffer \
-	libva_videodecoder \
-	libpvr2d \
-	libasfparser \
-	libmixvbp \
-	libmixvbp_mpeg4 \
-	libmixvbp_h264 \
-	libmixvbp_h264secure \
-	libmixvbp_vc1 \
-	libmixvbp_vp8 \
-	libia_redeye \
-	libia_ipf_engines \
-	libia_ipf \
-	libia_ipf_pipes \
-	libia_coordinate \
-	libpasses_host \
-	libpasses \
-	libmetadata_api_host \
-	libmetadata_api \
-	libreflection_module_host \
-	libreflection_module \
-	libLLVMVectorizer_host \
-	libLLVMVectorizer \
-	libname_mangle_host \
-	libname_mangle \
-	libaudioresample_static_host \
-	libaudioresample \
-	libsharedbuffer \
-	libhw-audience-manager \
-	libaudience-manager-base \
-	remote-process_host \
-	remote-process \
-	liblpe \
-	libxmlserializer_host \
-	libxmlserializer \
-	libremote-processor_host \
-	libremote-processor \
-	libparameter_host \
-	libparameter_includes_host \
-	libparameter \
-	libparameter_includes \
-	libproperty-subsystem \
-	liblpe-subsystem \
-	libutility_host \
-	libutility \
-	test-platform_host \
-	test-platform \
-	libmamgr-core \
-	widi.conf \
-	libwidimedia \
-	libwidiuibc \
-	WidiInputService \
-	libwidiuibcjni \
-	widi \
-	widisink_support \
-	libwidiclient \
-	libwidiservice \
-	libwidirtsp \
-	libwidirtspsink \
-	libwidirtspsink_jni \
-	libhwcwidi \
-	psh.bin \
-	psh_bk.bin \
-	fwupdatetool \
-	fwupdate_script.sh \
-	libstagefright_soft_aacdec_mdp \
-	libstagefright_soft_mp3dec_mdp \
-	lib_stagefright_mdp_wmadec \
-	lib_stagefright_mdp_amrnbdec \
-	libmc_amrcommon \
-	lib_stagefright_mdp_vp8dec \
-	lib_stagefright_mdp_aacdec \
-	lib_stagefright_mdp_mp3dec \
-	lib_stagefright_mdp_amrnbenc \
-	lib_stagefright_mdp_amrwbdec \
-	lib_stagefright_mdp_vorbisdec \
-	lib_stagefright_mdp_aacenc \
-	lib_stagefright_mdp_amrwbenc \
-	libmc_core \
-	libmc_codec_common \
-	libmc_mp3_dec \
-	libmc_aac_dec \
-	libmc_aac_enc \
-	libmc_gsmamr \
-	libmc_amrwb \
-	libmc_vorbis_dec \
-	libmc_wma_dec \
-	libmc_vp8_dec \
-	com.intel.android.meta \
-	libjni_eglfence2 \
-	libjni_filtershow_filters2 \
-	locationengine-api \
-	libBestGroupPhoto \
-	libvideoeditorsharing_core \
-	libvideoeditorsharing_osal \
-	libvideoeditorsharing_videofilters \
-	libvideoeditorsharing_jni \
-	libvideoeditorsharingplayer \
-	libia_face_jni \
-	com.intel.android.gallery3d.common2 \
-	libgesture \
-	libActivityInstant \
-	com.intel.aware.csp.provider \
-	com.intel.aware.csp.datalooper \
-	jansson \
-	libpluginapi \
-	libawarehubservice \
-	libandroidsupport \
-	libcsdk \
-	cacservice-x86 \
-	libclientapi \
-	libcu \
-	libcfcommon \
-	libcac \
-	libconfigurationmanager \
-	libjnitypesconversion \
-	libxsde \
-	CsmClient \
-	CWSClientService \
-	CwsServiceMgr \
-	CWS_SERVICE_MANAGER \
-  
-# OemTelephony for OEM HOOK API
-PRODUCT_PACKAGES += \
-    OemTelephonyApp \
-    com.intel.internal.telephony.MmgrClient
-
-PRODUCT_PACKAGE_OVERLAYS := \
-  device/intel/common/overlays_extensions
-
-DEVICE_PACKAGE_OVERLAYS := \
-  device/asus/a500cg/overlay
-  
-
-#libenc
-PRODUCT_PACKAGES += \
-  libenc
-
-#Skia
-PRODUCT_PACKAGES += \
-  libI420colorconvert \
-  libasfextractor \
-  libskia_ext \
-
-#ISV
-PRODUCT_PACKAGES += \
-  libisv_omx_core
-
-#Intel mult-thread
-PRODUCT_PACKAGES += \
-  libthreadedsource
-
-#Video editor
-PRODUCT_PACKAGES += \
-  libvavideodecoder \
-  libvideoeditor_stagefrightshells_intel \
-  liblvpp_intel \
-  libvss_intel
-
-#Intel Jpeg
-PRODUCT_PACKAGES += \
-  libjpeg-turbo \
-  libjpeg-turbo-static
-
-#Intel sensorhub
-PRODUCT_PACKAGES += \
-  sensorhubd \
-  libsensorhub  \
-  sensorhub_client \
-  calibration \
-  event_notification
-
-#libstagefrighthw
-PRODUCT_PACKAGES += \
-  libstagefrighthw
-
-#libaudio_hal
-PRODUCT_PACKAGES += \
-  libactive_value_set \
-  active_value_set_host \
-  libkeyvaluepairs \
-  libkeyvaluepairs_host \
-  libstream_static_host \
-  libstream_static \
-  libparametermgr_static_host \
-  libparametermgr_static \
-  libhalaudiodump \
-  libhalaudiodump_host \
-  libaudioplatformstate \
-  route_criteria.conf \
-  audio.routemanager \
-  audio.routemanager.includes \
-  libsamplespec_static_host \
-  libsamplespec_static \
-  audio_policy.$(TARGET_DEVICE) \
-  libaudioconversion_static_host \
-  libaudioconversion_static \
-  liblpepreprocessing \
-  liblpepreprocessinghelper \
-  liblpepreprocessinghelper_host \
-  audio_hal_configurable \
-  audio.primary.$(TARGET_DEVICE) \
-  libaudio_stream_manager_static_host \
-  libaudiohw_intel \
-  libaudiohw_intel_host
-
-############################### property ##########################
-
-
-# Extended JNI checks
-# The extended JNI checks will cause the system to run more slowly, but they can spot a variety of nasty bugs
-# before they have a chance to cause problems.
-# Default=true for development builds, set by android buildsystem.
-PRODUCT_PROPERTY_DEFAULTOVERRIDES += \
-    ro.kernel.android.checkjni=0 \
-    dalvik.vm.checkjni=false
+PRODUCT_DEFAULT_PROPERTY_OVERRIDES += ro.zygote=zygote32
 
 ADDITIONAL_DEFAULT_PROPERTIES += \
-  ro.debuggable=1 \
-  persist.sys.usb.config=mtp \
-  ro.secure=0 \
-  ro.adb.secure=0 \
-  persist.sys.adb.root=1 \
-  persist.sys.root_access=3
-  wifi.version.driver=5.90.195.89.38 \
-  gps.version.driver=6.19.6.216527 \
-  bt.version.driver=V10.00.01 \
+    ro.config.low_ram=false \
+    ro.ril.status.polling.enable=0 \
+    ro.product.cpu.abi2=armeabi-v7a \
+    ro.config.personality=compat_layout
 
-PRODUCT_PROPERTY_OVERRIDES += \
-  ro.dalvik.vm.isa.arm=x86 \
-  ro.enable.native.bridge.exec=1
+# NFC
+BOARD_HAVE_NFC := false
 
-# set USB OTG enabled to add support for USB storage type
-PRODUCT_PROPERTY_OVERRIDES += persist.sys.isUsbOtgEnabled=1
+#BINDER
+TARGET_USES_64_BIT_BINDER := true
 
-# Set default network type to LTE/GSM/WCDMA (9)
-PRODUCT_PROPERTY_OVERRIDES += ro.telephony.default_network=0
+# Audio
+BOARD_USES_ALSA_AUDIO := true
+BUILD_WITH_ALSA_UTILS := true
+BOARD_USES_TINY_ALSA_AUDIO := true
+BOARD_USES_AUDIO_HAL_XML := true
+BOARD_USES_AUDIO_HAL_CONFIGURABLE := true
+
+# DRM Protected Video
+BOARD_WIDEVINE_OEMCRYPTO_LEVEL := 1
+USE_INTEL_SECURE_AVC := true
+
+# enable ARM codegen for x86 with Houdini
+BUILD_ARM_FOR_X86 := true
+
+# HW_Renderer
+USE_OPENGL_RENDERER := true
+BOARD_EGL_CFG := device/asus/a500cg/configs/egl.cfg
+BOARD_ALLOW_EGL_HIBERNATION := true
+TARGET_RUNNING_WITHOUT_SYNC_FRAMEWORK := true
+COMMON_GLOBAL_CFLAGS += -DFORCE_SCREENSHOT_CPU_PATH
+BOARD_EGL_WORKAROUND_BUG_10194508 := true
+
+# DPST
+INTEL_DPST := true
+
+# HWComposer
+BOARD_USES_HWCOMPOSER := true
+
+# RILD
+RIL_SUPPORTS_SEEK := true
+
+# GPS
+BOARD_HAVE_GPS := true
+GPS_CHIP_VENDOR := bcm
+GPS_CHIP := 4752
+
+# RMT_STORAGE
+BOARD_USES_LEGACY_MMAP := true
+
+ADDITIONAL_DEFAULT_PROPERTIES += \
+    ro.sf.lcd_density=320 \
+    ro.opengles.version = 131072 \
+    gsm.net.interface=rmnet0 \
+    persist.system.at-proxy.mode=0 \
+    ro.dalvik.vm.native.bridge=libhoudini.so \
+    dalvik.vm.dex2oat-Xms=64m \
+    dalvik.vm.dex2oat-Xmx=512m \
+    dalvik.vm.image-dex2oat-Xms=64m \
+    dalvik.vm.image-dex2oat-Xmx=64m
+
+# Storage information
+BOARD_HAS_LARGE_FILESYSTEM := true
+
+# Recovery global
+#TARGET_RECOVERY_INITRC := $(LOCAL_PATH)/ramdisk/init.recovery.redhookbay.rc
+#BOARD_RECOVERY_SWIPE := true
+#BOARD_UMS_LUNFILE := "/sys/devices/virtual/android_usb/android0/f_mass_storage/lun/file"
+
+# TWRP Recovery
+# update your twrp.fstab to recovery dir /etc/twrp.fstab
+#TW_NO_LEGACY_PROPS := true
+#RECOVERY_GRAPHICS_USE_LINELENGTH := true
+#TW_DISABLE_DOUBLE_BUFFERING_CHECK := true
+#TW_THEME := portrait_hdpi
+
+#TW_BRIGHTNESS_PATH := /sys/class/backlight/psb-bl/brightness
+#BOARD_HAS_NO_SELECT_BUTTON := true
+#BOARD_USE_CUSTOM_RECOVERY_FONT := \"roboto_15x24.h\"
+#TW_INCLUDE_CRYPTO := true
+#TW_INTERNAL_STORAGE_PATH := "/media/data/0"
+#TW_INTERNAL_STORAGE_MOUNT_POINT := "/data"
+#TW_EXTERNAL_STORAGE_PATH := "/external_sd"
+#TW_EXTERNAL_STORAGE_MOUNT_POINT := "external_sd"
+#TW_DEFAULT_EXTERNAL_STORAGE := true
+#TW_HAS_MTP := true
+#TW_NO_SCREEN_BLANK := true
+#TW_NO_SCREEN_TIMEOUT := true
+#TW_CUSTOM_BATTERY_PATH := /sys/class/power_supply/max170xx_battery
+#TW_BRIGHTNESS_PATH := /sys/class/backlight/psb-bl/brightness
+#TW_MAX_BRIGHTNESS := 255
+#TW_CUSTOM_POWER_BUTTON := 116
+#TARGET_USE_CUSTOM_LUN_FILE_PATH := "/sys/devices/virtual/android_usb/android0/f_mass_storage/lun/file"
+#TW_CUSTOM_CPU_TEMP_PATH := "/sys/devices/virtual/thermal/thermal_zone0/temp"
+#TWRP_EVENT_LOGGING := false
 
 
-# setup dalvik vm configs.
-$(call inherit-product, frameworks/native/build/phone-xhdpi-2048-dalvik-heap.mk)
-#$(call inherit-product-if-exists, vendor/asus/a500cg/a500cg-vendor-blobs.mk)
-#$(call inherit-product-if-exists, vendor/google/gapps/gapps.mk)
+
+# SELinux
+#HAVE_SELINUX := true
+#BOARD_SEPOLICY_DIRS += device/asus/a500cg/sepolicy
+
+#BOARD_SEPOLICY_UNION += \
+#    file_contexts \
+#    seapp_contexts \
+#    property_contexts \
+#    service_contexts \
+#    file.te \
+#    device.te \
+#    ecryptfs.te \
+#    genfs_contexts \
+#    vold.te \
+#    surfaceflinger.te \
+#    zygote.te \
+#    pvrsrvctl.te \
+#    bluetooth.te \
+#    surfaceflinger.te \
+#    system_app.te \
+#    file.te \
+#    shell.te \
+#    mediaserver.te \
+#    nvm_server.te \
+#    su.te   \
+#    system_server.te \
+#    service.te \
+#    mmgr.te \
+#    init.te \
+#   kernel.te \
+#    sysfs_uart_power_ctrl.te \
+#    ueventd.te \
+#   logcat.te \
+#    netd.te \
+#    wpa.te \
+#    rild.te \
+#    akmd.te \
+#    gauge.te \
+#    customize.te \
+#    untrusted_app.te
+
+# Build From source
+ENABLE_IMG_GRAPHICS := true
+#ENABLE_GEN_GRAPHICS := true
+USE_INTEL_MDP := true
+BUILD_WITH_FULL_STAGEFRIGHT := true
+BOARD_USE_LIBVA_INTEL_DRIVER := true
+BOARD_USE_LIBVA := true
+BOARD_USE_LIBMIX := true
+USE_INTEL_VA := true
+INTEL_VA := true
+USE_HW_VP8 := true
+#TARGET_HAS_MULTIPLE_DISPLAY := true
+USE_AVC_SHORT_FORMAT := true
+USE_SLICE_HEADER_PARSING := true
+USE_SW_MPEG4 := true
+
+#OMX-components
+BOARD_USES_MRST_OMX := true
+BOARD_USES_WRS_OMXIL_CORE := true
+TARGET_HAS_ISV := true
+
+# Rild
+# Radio
+BOARD_RIL_SUPPORTS_MULTIPLE_CLIENTS := true
+BOARD_RIL_CLASS := ../../../device/asus/a500cg/ril
+SIM_COUNT := 2
+# Use Intel camera extras (HDR, face detection, panorama, etc.) by default
+USE_INTEL_CAMERA_EXTRAS := true
+
+# select libcamera2 as the camera HAL
+USE_CAMERA_HAL2 := true
+USE_CSS_1_5 := true
+USE_CSS_2_0 := true
+USE_CSS_2_1 := true
+USE_INTEL_METABUFFER := true
+USE_INTEL_JPEG := true
+USE_CAMERA_IO_BREAKDOWN := true
+
+
+# disable the new V3 HAL by default so it can be added to the tree without conflicts
+# it will be enabled in selected platforms
+USE_CAMERA_HAL_3 := false
+
+# Set USE_VIDEO_EFFECT to 'false' to unsupport live face effect. And Set OMX Component Input Buffer Count to 2.
+USE_VIDEO_EFFECT := true
+
+# Do not use shared object of ia_face by default
+USE_SHARED_IA_FACE := false
+
+# Use multi-thread for acceleration
+USE_INTEL_MULT_THREAD := true
+
+# Use Async OMX for http streaming
+USE_ASYNC_OMX_CLIENT := true
+
+# Use panorama v1.0 by default
+IA_PANORAMA_VERSION := 1.0
+
+# Turn on GR_STATIC_RECT_VB flag in skia to boost performance
+TARGET_USE_GR_STATIC_RECT_VB := true
+
+ifeq ($(TARGET_RIL_DISABLE_STATUS_POLLING),true)
+ADDITIONAL_BUILD_PROPERTIES += ro.ril.status.polling.enable=0
+endif
+
+# Libm
+#TARGET_USE_PRIVATE_LIBM := true
+
+#TARGET_HAS_MULTIPLE_DISPLAY := true
+USE_MDS_LEGACY := true
+#BOARD_CAMERA_PLUGIN := vendor/intel/hardware/camera_extension
+#include $(COMMON_PATH)/BoardConfig.mk
+BOARD_USES_CYANOGEN_HARDWARE := true
+
+# HWcomposer
+INTEL_HWC := true
+INTEL_WIDI := false
+TARGET_SUPPORT_HWC_SYS_LAYER := true
+TARGET_HAS_MULTIPLE_DISPLAY := true
+
+INTEL_FEATURE_AWARESERVICE := true
+#PRODUCT_BOOT_JARS += com.intel.aware.awareservice
+
+# System's VSYNC phase offsets in nanoseconds
+VSYNC_EVENT_PHASE_OFFSET_NS := 7500000
+SF_VSYNC_EVENT_PHASE_OFFSET_NS := 5000000
+
+# Allow HWC to perform a final CSC on virtual displays
+TARGET_FORCE_HWC_FOR_VIRTUAL_DISPLAYS := true
+NUM_FRAMEBUFFER_SURFACE_BUFFERS := 3
+INTEL_WIDI := true
+HWUI_IMG_FBO_CACHE_OPTIM := true
+TARGET_INTEL_HWCOMPOSER_FORCE_ONLY_ONE_RGB_LAYER := true
+BOARD_USE_VIBRATOR := true
+#BOARD_USES_VIBRATOR_HAL_XML := true
+
+#USE_GENERAL_SENSOR_DRIVER := true
+# Lights
+TARGET_PROVIDES_LIBLIGHT := true
+
+BOARD_HAVE_AUDIENCE := true
+
+#Rapid-ril
+M2_VT_FEATURE_ENABLED := true
+M2_CALL_FAILED_CAUSE_FEATURE_ENABLED := true
+#M2_PIN_RETRIES_FEATURE_ENABLED := true
+BOARD_HAVE_IFX6265 := true
+M2_GET_SIM_SMS_STORAGE_ENABLED := true
+
+#WebRTC
+ENABLE_WEBRTC := true
+
+#ALAC CODEC
+USE_FEATURE_ALAC := true
+
+BOARD_HAVE_MODEM := true
+
+# Logcat use android kernel logger
+TARGET_USES_LOGD := false
+TARGET_HAVE_CWS := true
+
+#Enable exfat
+VOLD_ENABLE_EXFAT := true
+
+#ASF
+USE_INTEL_ASF_EXTRACTOR := true
+
+INTEL_FEATURE_DPTF := true
+
+SEMC_CFG_FM_SERVICE_TI := true
+SEMC_CFG_FM_SERVICE_TI_HW := true
