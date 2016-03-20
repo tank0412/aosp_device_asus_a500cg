@@ -33,3 +33,4 @@ if [ ! -e $lto_dat_file -o ! -z "$(find $lto_dat_file -mtime +$max_age_days)" ];
   exit 1
 fi
 echo "LTO data < $max_age_days days old - skipping update"
+

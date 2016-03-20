@@ -1,0 +1,270 @@
+From a804eea56c7e5cbcbb789fa81b2204c8ee876e31 Mon Sep 17 00:00:00 2001
+From: quanganh2627 <quanganh2627@gmail.com>
+Date: Sun, 11 Oct 2015 14:47:03 +0700
+Subject: [PATCH] [Vibra] Fix vibra services in Zenfone 5 x86
+
+Change-Id: I1dd1294b01e28e488362e778501dec25f7b6faee
+---
+ Android.mk                                         |  6 +--
+ core/java/android/os/IVibratorService.aidl         |  1 -
+ core/java/android/os/SystemVibrator.java           | 35 --------------
+ .../java/com/android/server/VibratorService.java   | 27 +++--------
+ .../jni/com_android_server_VibratorService.cpp     | 55 ++++++++++++++++++----
+ 5 files changed, 56 insertions(+), 68 deletions(-)
+
+diff --git a/Android.mk b/Android.mk
+index 91b2a99..4f8a721 100755
+--- a/Android.mk
++++ b/Android.mk
+@@ -149,9 +149,9 @@ LOCAL_SRC_FILES += \
+ 	core/java/android/content/pm/IPackageManager.aidl \
+ 	core/java/android/content/pm/IPackageMoveObserver.aidl \
+ 	core/java/android/content/pm/IPackageStatsObserver.aidl \
+-        core/java/android/content/res/IThemeChangeListener.aidl \
+-        core/java/android/content/res/IThemeProcessingListener.aidl \
+-        core/java/android/content/res/IThemeService.aidl \
++	core/java/android/content/res/IThemeChangeListener.aidl \
++	core/java/android/content/res/IThemeProcessingListener.aidl \
++	core/java/android/content/res/IThemeService.aidl \
+ 	core/java/android/database/IContentObserver.aidl \
+ 	core/java/android/hardware/ICameraService.aidl \
+ 	core/java/android/hardware/ICameraServiceListener.aidl \
+diff --git a/core/java/android/os/IVibratorService.aidl b/core/java/android/os/IVibratorService.aidl
+index eaf10d0..6f2857d 100644
+--- a/core/java/android/os/IVibratorService.aidl
++++ b/core/java/android/os/IVibratorService.aidl
+@@ -23,6 +23,5 @@ interface IVibratorService
+     void vibrate(int uid, String opPkg, long milliseconds, int usageHint, IBinder token);
+     void vibratePattern(int uid, String opPkg, in long[] pattern, int repeat, int usageHint, IBinder token);
+     void cancelVibrate(IBinder token);
+-    void vibrateLowPriority(int uid, String opPkg, in long[] pattern, int repeat, int usageHint, IBinder token);
+ }
+ 
+diff --git a/core/java/android/os/SystemVibrator.java b/core/java/android/os/SystemVibrator.java
+index a473605..c488811 100644
+--- a/core/java/android/os/SystemVibrator.java
++++ b/core/java/android/os/SystemVibrator.java
+@@ -16,7 +16,6 @@
+ 
+ package android.os;
+ 
+-import android.app.ActivityThread;
+ import android.content.Context;
+ import android.media.AudioAttributes;
+ import android.util.Log;
+@@ -97,40 +96,6 @@ public class SystemVibrator extends Vibrator {
+         }
+     }
+ 
+-    /**
+-     * Vibrates with a reduced thread priority. Useful in situations like ringtones
+-     * where the high-priority task may preempt other activity.
+-     *
+-     * @hide
+-     */
+-    public void vibrateLowPriority(int uid, String opPkg, long[] pattern, int repeat,
+-            AudioAttributes attributes) {
+-        if (mService == null) {
+-            Log.w(TAG, "Failed to vibrate; no vibrator service.");
+-            return;
+-        }
+-        // catch this here because the server will do nothing.  pattern may
+-        // not be null, let that be checked, because the server will drop it
+-        // anyway
+-        if (repeat < pattern.length) {
+-            try {
+-                mService.vibrateLowPriority(uid, opPkg, pattern, repeat, usageForAttributes(attributes),
+-                        mToken);
+-            } catch (RemoteException e) {
+-                Log.w(TAG, "Failed to vibrate.", e);
+-            }
+-        } else {
+-            throw new ArrayIndexOutOfBoundsException();
+-        }
+-    }
+-
+-    /**
+-     * @hide
+-     */
+-    public void vibrateLowPriority(long[] pattern, int repeat, AudioAttributes attributes) {
+-        vibrateLowPriority(Process.myUid(), ActivityThread.currentPackageName(), pattern, repeat, attributes);
+-    }
+-
+     private static int usageForAttributes(AudioAttributes attributes) {
+         return attributes != null ? attributes.getUsage() : AudioAttributes.USAGE_UNKNOWN;
+     }
+diff --git a/services/core/java/com/android/server/VibratorService.java b/services/core/java/com/android/server/VibratorService.java
+index 68a6659..9557ebd 100644
+--- a/services/core/java/com/android/server/VibratorService.java
++++ b/services/core/java/com/android/server/VibratorService.java
+@@ -82,6 +82,7 @@ public class VibratorService extends IVibratorService.Stub
+     private SettingsObserver mSettingObserver;
+ 
+     native static boolean vibratorExists();
++    native static void vibratorInit();
+     native static void vibratorOn(long milliseconds);
+     native static void vibratorOff();
+ 
+@@ -94,19 +95,18 @@ public class VibratorService extends IVibratorService.Stub
+         private final int     mUsageHint;
+         private final int     mUid;
+         private final String  mOpPkg;
+-        private final boolean mHighPriority;
+ 
+         Vibration(IBinder token, long millis, int usageHint, int uid, String opPkg) {
+-            this(token, millis, null, 0, usageHint, uid, false, opPkg);
++            this(token, millis, null, 0, usageHint, uid, opPkg);
+         }
+ 
+         Vibration(IBinder token, long[] pattern, int repeat, int usageHint, int uid,
+                 String opPkg) {
+-            this(token, 0, pattern, repeat, usageHint, uid, false, opPkg);
++            this(token, 0, pattern, repeat, usageHint, uid, opPkg);
+         }
+ 
+         private Vibration(IBinder token, long millis, long[] pattern,
+-                int repeat, int usageHint, int uid, boolean hipri, String opPkg) {
++                int repeat, int usageHint, int uid, String opPkg) {
+             mToken = token;
+             mTimeout = millis;
+             mStartTime = SystemClock.uptimeMillis();
+@@ -115,7 +115,6 @@ public class VibratorService extends IVibratorService.Stub
+             mUsageHint = usageHint;
+             mUid = uid;
+             mOpPkg = opPkg;
+-            mHighPriority = hipri;
+         }
+ 
+         public void binderDied() {
+@@ -149,6 +148,7 @@ public class VibratorService extends IVibratorService.Stub
+     }
+ 
+     VibratorService(Context context) {
++        vibratorInit();
+         // Reset the hardware to a default state, in case this is a runtime
+         // restart instead of a fresh boot.
+         vibratorOff();
+@@ -274,17 +274,6 @@ public class VibratorService extends IVibratorService.Stub
+     @Override // Binder call
+     public void vibratePattern(int uid, String packageName, long[] pattern, int repeat,
+             int usageHint, IBinder token) {
+-        vibrateInternal(uid, packageName, pattern, repeat, usageHint, true, token);
+-    }
+-
+-    @Override // Binder call
+-    public void vibrateLowPriority(int uid, String packageName, long[] pattern, int repeat,
+-            int usageHint, IBinder token) {
+-        vibrateInternal(uid, packageName, pattern, repeat, usageHint, false, token);
+-    }
+-
+-    private void vibrateInternal(int uid, String packageName, long[] pattern, int repeat,
+-            int usageHint, boolean hipri, IBinder token) {
+         if (mContext.checkCallingOrSelfPermission(android.Manifest.permission.VIBRATE)
+                 != PackageManager.PERMISSION_GRANTED) {
+             throw new SecurityException("Requires VIBRATE permission");
+@@ -309,7 +298,7 @@ public class VibratorService extends IVibratorService.Stub
+                 return;
+             }
+ 
+-            Vibration vib = new Vibration(token, 0, pattern, repeat, usageHint, uid, hipri, packageName);
++            Vibration vib = new Vibration(token, pattern, repeat, usageHint, uid, packageName);
+             try {
+                 token.linkToDeath(vib, 0);
+             } catch (RemoteException e) {
+@@ -615,9 +604,7 @@ public class VibratorService extends IVibratorService.Stub
+         }
+ 
+         public void run() {
+-            Process.setThreadPriority(mVibration.mHighPriority ?
+-                    Process.THREAD_PRIORITY_URGENT_DISPLAY :
+-                    Process.THREAD_PRIORITY_FOREGROUND - 1);
++            Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_DISPLAY);
+             synchronized (this) {
+                 final long[] pattern = mVibration.mPattern;
+                 final int len = pattern.length;
+diff --git a/services/core/jni/com_android_server_VibratorService.cpp b/services/core/jni/com_android_server_VibratorService.cpp
+index 2b3f74a..6b7a042 100644
+--- a/services/core/jni/com_android_server_VibratorService.cpp
++++ b/services/core/jni/com_android_server_VibratorService.cpp
+@@ -22,32 +22,69 @@
+ 
+ #include <utils/misc.h>
+ #include <utils/Log.h>
+-#include <hardware_legacy/vibrator.h>
++#include <hardware/vibrator.h>
+ 
+ #include <stdio.h>
+ 
+ namespace android
+ {
+ 
+-static jboolean vibratorExists(JNIEnv *env, jobject clazz)
++static hw_module_t *gVibraModule = NULL;
++static vibrator_device_t *gVibraDevice = NULL;
++
++static void vibratorInit(JNIEnv, jobject)
++{
++    if (gVibraModule != NULL) {
++        return;
++    }
++
++    int err = hw_get_module(VIBRATOR_HARDWARE_MODULE_ID, (hw_module_t const**)&gVibraModule);
++
++    if (err) {
++        ALOGE("Couldn't load %s module (%s)", VIBRATOR_HARDWARE_MODULE_ID, strerror(-err));
++    } else {
++        if (gVibraModule) {
++            vibrator_open(gVibraModule, &gVibraDevice);
++        }
++    }
++}
++
++static jboolean vibratorExists(JNIEnv, jobject)
+ {
+-    return vibrator_exists() > 0 ? JNI_TRUE : JNI_FALSE;
++    if (gVibraModule && gVibraDevice) {
++        return JNI_TRUE;
++    } else {
++        return JNI_FALSE;
++    }
+ }
+ 
+-static void vibratorOn(JNIEnv *env, jobject clazz, jlong timeout_ms)
++static void vibratorOn(JNIEnv, jobject, jlong timeout_ms)
+ {
+-    // ALOGI("vibratorOn\n");
+-    vibrator_on(timeout_ms);
++    if (gVibraDevice) {
++        int err = gVibraDevice->vibrator_on(gVibraDevice, timeout_ms);
++        if (err != 0) {
++            ALOGE("The hw module failed in vibrator_on: %s", strerror(-err));
++        }
++    } else {
++        ALOGW("Tried to vibrate but there is no vibrator device.");
++    }
+ }
+ 
+-static void vibratorOff(JNIEnv *env, jobject clazz)
++static void vibratorOff(JNIEnv, jobject)
+ {
+-    // ALOGI("vibratorOff\n");
+-    vibrator_off();
++    if (gVibraDevice) {
++        int err = gVibraDevice->vibrator_off(gVibraDevice);
++        if (err != 0) {
++            ALOGE("The hw module failed in vibrator_off(): %s", strerror(-err));
++        }
++    } else {
++        ALOGW("Tried to stop vibrating but there is no vibrator device.");
++    }
+ }
+ 
+ static JNINativeMethod method_table[] = {
+     { "vibratorExists", "()Z", (void*)vibratorExists },
++    { "vibratorInit", "()V", (void*)vibratorInit },
+     { "vibratorOn", "(J)V", (void*)vibratorOn },
+     { "vibratorOff", "()V", (void*)vibratorOff }
+ };
+-- 
+1.9.1
+

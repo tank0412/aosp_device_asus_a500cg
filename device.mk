@@ -14,20 +14,29 @@
 # limitations under the License.
 #
 
-LOCAL_PATH := device/asus/a500cg
+
+$(call inherit-product-if-exists, vendor/asus/a500cg/a500cg-vendor.mk)
 
 $(call inherit-product, device/asus/a500cg/intel-boot-tools/Android.mk)
-
+$(call inherit-product, $(SRC_TARGET_DIR)/product/full_base_telephony.mk)
 $(call inherit-product, $(SRC_TARGET_DIR)/product/languages_full.mk)
 
+LOCAL_PATH := device/asus/a500cg
+
+PRODUCT_BRAND := asus
+PRODUCT_MODEL := ASUS_T00F
+PRODUCT_DEVICE := a500cg
+
 ifeq ($(TARGET_PREBUILT_KERNEL),)
-	LOCAL_KERNEL := $(LOCAL_PATH)/blobs/bzImage
+	LOCAL_KERNEL := device/asus/a500cg/blobs/bzImage-boot-newDTW
 else
 	LOCAL_KERNEL := $(TARGET_PREBUILT_KERNEL)
 endif
-
 PRODUCT_COPY_FILES += \
     $(LOCAL_KERNEL):kernel
+
+#TARGET_RECOVERY_PREBUILT_KERNEL := $(LOCAL_KERNEL)
+
 
 # This device is xhdpi.  However the platform doesn't
 # currently contain all of the bitmaps at xhdpi density so
@@ -36,9 +45,8 @@ PRODUCT_COPY_FILES += \
 PRODUCT_AAPT_CONFIG := normal hdpi xhdpi
 PRODUCT_AAPT_PREF_CONFIG := xhdpi
 
-DEVICE_BASE_BOOT_IMAGE := $(LOCAL_PATH)/blobs/boot.img
-DEVICE_BASE_RECOVERY_IMAGE := $(LOCAL_PATH)/blobs/recovery-ww-2.20.40.13.img
-BOARD_CUSTOM_BOOTIMG_MK := $(LOCAL_PATH)/intel-boot-tools/boot.mk
+
+CUSTOM_SUPERUSER = SuperSu
 
 # specific management of audio_policy.conf
 PRODUCT_COPY_FILES += \
@@ -48,9 +56,9 @@ PRODUCT_COPY_FILES += \
     frameworks/av/media/libstagefright/data/media_codecs_google_telephony.xml:system/etc/media_codecs_google_telephony.xml \
     frameworks/av/media/libstagefright/data/media_codecs_google_video.xml:system/etc/media_codecs_google_video.xml
 
+# specific management of lto
 PRODUCT_COPY_FILES += \
     device/asus/a500cg/config_lto.sh:system/etc/init.d/01config_lto
-
 
 # Intel Display
 PRODUCT_PROPERTY_OVERRIDES += \
@@ -126,9 +134,7 @@ PRODUCT_PACKAGES += \
 PRODUCT_PACKAGES += \
 	msvdx_bin \
 	topaz_bin
-
 PRODUCT_COPY_FILES += \
-  device/asus/a500cg/configs/platform.xml:system/etc/permissions/platform.xml \
   frameworks/native/data/etc/handheld_core_hardware.xml:system/etc/permissions/handheld_core_hardware.xml \
   frameworks/native/data/etc/android.hardware.camera.autofocus.xml:system/etc/permissions/android.hardware.camera.autofocus.xml \
   frameworks/native/data/etc/android.hardware.camera.flash-autofocus.xml:system/etc/permissions/android.hardware.camera.flash-autofocus.xml \
@@ -142,6 +148,7 @@ PRODUCT_COPY_FILES += \
   frameworks/native/data/etc/android.hardware.sensor.compass.xml:system/etc/permissions/android.hardware.sensor.compass.xml \
   frameworks/native/data/etc/android.hardware.sensor.light.xml:system/etc/permissions/android.hardware.sensor.light.xml \
   frameworks/native/data/etc/android.hardware.sensor.proximity.xml:system/etc/permissions/android.hardware.sensor.proximity.xml \
+  frameworks/native/data/etc/android.hardware.sensor.ambient_temperature.xml:system/etc/permissions/android.hardware.sensor.ambient_temperature.xml \
   frameworks/native/data/etc/android.hardware.telephony.gsm.xml:system/etc/permissions/android.hardware.telephony.gsm.xml \
   frameworks/native/data/etc/android.hardware.touchscreen.multitouch.distinct.xml:system/etc/permissions/android.hardware.touchscreen.multitouch.distinct.xml \
   frameworks/native/data/etc/android.hardware.touchscreen.multitouch.jazzhand.xml:system/etc/permissions/android.hardware.touchscreen.multitouch.jazzhand.xml \
@@ -152,14 +159,18 @@ PRODUCT_COPY_FILES += \
   frameworks/native/data/etc/android.hardware.wifi.direct.xml:system/etc/permissions/android.hardware.wifi.direct.xml \
   frameworks/native/data/etc/android.hardware.wifi.xml:system/etc/permissions/android.hardware.wifi.xml \
   frameworks/native/data/etc/android.software.sip.voip.xml:system/etc/permissions/android.software.sip.voip.xml \
+  frameworks/native/data/etc/android.software.sip.xml:system/etc/permissions/android.software.sip.xml \
+  frameworks/native/data/etc/android.software.app_widgets.xml:system/etc/permissions/android.software.app_widgets.xml \
+  frameworks/native/data/etc/android.software.backup.xml:system/etc/permissions/android.software.backup.xml \
   frameworks/native/data/etc/android.software.webview.xml:system/etc/permissions/android.software.webview.xml \
   frameworks/native/data/etc/android.hardware.bluetooth_le.xml:system/etc/permissions/android.hardware.bluetooth_le.xml
 
 PRODUCT_COPY_FILES += \
   $(call find-copy-subdir-files,*,device/asus/a500cg/include,obj/include)
 
-PRODUCT_PROPERTY_OVERRIDES += \
-ro.telephony.ril_class=Zenfone5RIL
+#GPS FIX
+PRODUCT_COPY_FILES += \
+    $(LOCAL_PATH)/configs/gpsd:system/bin/gpsd
 
 PRODUCT_PROPERTY_OVERRIDES += \
   ro.sf.lcd_density=320 \
@@ -194,10 +205,14 @@ PRODUCT_PACKAGES += \
   gps.default \
   gps.$(TARGET_DEVICE)
 
+#GPS link to this static lib
+PRODUCT_PACKAGES += \
+  libCpd
+
 # Keyhandler
 #PRODUCT_PACKAGES += \
-    com.cyanogenmod.keyhandler \
-    CMActions
+    com.cyanogenmod.keyhandler
+#    CMActions
 
 # Filesystem management tools
 PRODUCT_PACKAGES += \
@@ -209,11 +224,12 @@ PRODUCT_PACKAGES += \
   Stk
 
 PRODUCT_PACKAGES += \
-  libmultidisplay \
-  libmultidisplayjni \
-  com.intel.multidisplay.xml
+	com.intel.multidisplay.xml \
+	com.intel.multidisplay \
+	libmultidisplay \
+	libmultidisplayjni
 
-# library 
+# library
 PRODUCT_PACKAGES += \
   libtinyxml \
   minizip \
@@ -249,7 +265,7 @@ PRODUCT_PACKAGES += \
 #include vendor/intel/hardware/sensors/Android.mk
 
 PRODUCT_PACKAGES += \
-  lights.a500cg 
+  lights.a500cg
 #include vendor/intel/hardware/liblights/Android.mk
 
 PRODUCT_PACKAGES += \
@@ -260,32 +276,74 @@ PRODUCT_PACKAGES += \
 # libcamera2
 PRODUCT_PACKAGES += \
   camera.$(TARGET_DEVICE)
-  
+
 # lib audio.codec.offload
 #PRODUCT_PACKAGES += \
 #  audio.codec_offload.$(TARGET_DEVICE)
-  
+
 #Touchfilter
 PRODUCT_PACKAGES += \
   libeventprocessing
-  
+
 PRODUCT_PACKAGES += \
   libgesture \
   libActivityInstant
-  
+
+#ZenUI set
+#PRODUCT_PACKAGES += \
+  AsusKeyboard \
+  libjni_xt9input \
+  AsusFMService \
+  OemTelephonyApp \
+  AsusBackup \
+  ASUSGalleryBurst \
+  libjni_picbest_static \
+  libjni_piclear_static \
+  libgifencoder \
+  3CToolbox \
+  PCLinkManager \
+  AsusInputDevices \
+  AsusCalculator \
+  AsusCamera \
+  ASUSGallery \
+  libjni_face_effect \
+  libgif \
+  libjni_face_detection \
+  libjni_filter_show \
+  SepService \
+  SMMI_TEST \
+  AsusFMRadio \
+  AsusLauncher \
+  libkcmutil \
+  ICEsoundService \
+  PCLinkBinary \
+  ASUSBrowser \
+  SensorCal \
+  AsusDrawRes \
+  MyASUS \
+  libBaiduMapSDK_v2_4_1 \
+  libbdpush_V2_2 \
+  CWSClientService \
+  SARManager \
+  ZenUIHelp \
+  AsusZenUIServices \
 
 #ituxd for intel thermal management
 ENABLE_ITUXD := true
 PRODUCT_PACKAGES += \
   ituxd
-  
+
 # sbin/thermald
 PRODUCT_PACKAGES += \
   thermald
 
 PRODUCT_PACKAGES += \
   libproperty
-  
+
+#Port App Screencast/ Nameless Rom
+PRODUCT_PACKAGES += \
+  Screencast
+
 PRODUCT_PACKAGES += \
 	libmorpho_image_stabilizer3 \
 	libtbd \
@@ -437,19 +495,19 @@ PRODUCT_PACKAGES += \
 	CsmClient \
 	CWSClientService \
 	CwsServiceMgr \
-	CWS_SERVICE_MANAGER \
-  
+	CWS_SERVICE_MANAGER
+$(call inherit-product-if-exists,  prebuilts/intel-prebuilt/Android.mk)
 # OemTelephony for OEM HOOK API
 PRODUCT_PACKAGES += \
     OemTelephonyApp \
-    com.intel.internal.telephony.MmgrClient
+    com.intel.internal.telephony.MmgrClient \
+	com.intel.internal.telephony.MmgrClient.xml
 
 PRODUCT_PACKAGE_OVERLAYS := \
   device/intel/common/overlays_extensions
 
 DEVICE_PACKAGE_OVERLAYS := \
   device/asus/a500cg/overlay
-  
 
 #libenc
 PRODUCT_PACKAGES += \
@@ -523,6 +581,20 @@ PRODUCT_PACKAGES += \
   libaudiohw_intel \
   libaudiohw_intel_host
 
+#Using prebuilt webview to produce build-time
+PRODUCT_PACKAGES += \
+    libwebviewchromium_plat_support \
+    libwebviewchromium_loader
+
+#libenc
+#PRODUCT_PACKAGES += \
+#  libfmrx \
+#  fmreceiverif \
+#  com.ti.fm.fmreceiverif.xml
+
+# Turn on genarate changelog om repo
+MAKE_CHANGELOG := true
+
 ############################### property ##########################
 
 
@@ -530,7 +602,7 @@ PRODUCT_PACKAGES += \
 # The extended JNI checks will cause the system to run more slowly, but they can spot a variety of nasty bugs
 # before they have a chance to cause problems.
 # Default=true for development builds, set by android buildsystem.
-PRODUCT_PROPERTY_DEFAULTOVERRIDES += \
+PRODUCT_PROPERTY_OVERRIDES += \
     ro.kernel.android.checkjni=0 \
     dalvik.vm.checkjni=false
 
@@ -544,6 +616,12 @@ ADDITIONAL_DEFAULT_PROPERTIES += \
   wifi.version.driver=5.90.195.89.38 \
   gps.version.driver=6.19.6.216527 \
   bt.version.driver=V10.00.01 \
+  ro.epad.mount_point.microsd=/storage/MicroSD \
+  ro.epad.mount_point.usbdisk1=/storage/USBdisk1 \
+  ro.epad.mount_point.usbdisk2=/storage/USBdisk2 \
+  ro.epad.mount_point.usbdisk3=/storage/USBdisk3 \
+  ro.epad.mount_point.usbdisk4=/storage/USBdisk4 \
+  ro.epad.mount_point.usbdisk5=/storage/USBdisk5
 
 PRODUCT_PROPERTY_OVERRIDES += \
   ro.dalvik.vm.isa.arm=x86 \
@@ -558,5 +636,7 @@ PRODUCT_PROPERTY_OVERRIDES += ro.telephony.default_network=0
 
 # setup dalvik vm configs.
 $(call inherit-product, frameworks/native/build/phone-xhdpi-2048-dalvik-heap.mk)
+#$(call inherit-product, frameworks/native/build/phone-xxhdpi-2048-hwui-memory.mk)
 #$(call inherit-product-if-exists, vendor/asus/a500cg/a500cg-vendor-blobs.mk)
 #$(call inherit-product-if-exists, vendor/google/gapps/gapps.mk)
+

@@ -1,17 +1,25 @@
 # Additional file_contexts
 # label graphics device with a new type
-/dev/dri/card0              u:object_r:gpu_device:s0
+#/dev/dri/card0              u:object_r:gpu_device:s0
 
 # sep (Symantec endpoint protection) device, since app domain doesn't have access to tee device
 /dev/sep_sec_driver         u:object_r:sep_device:s0
 
+# PCLink
+/dev/android_pclink.*	u:object_r:pclink_device:s0
+/dev/socket/pclinkd	u:object_r:pclinkd_socket:s0
+
+# asec container
+/mnt/secure/asec(/.*)?      u:object_r:asec_image_file_ext:s0
+
 # GPS
 # remove?
 /dev/gsmtty7                u:object_r:gps_device:s0
-/system/bin/gpsd            u:object_r:gpsd_exec:s0
+#/system/bin/gpsd     	    u:object_r:gpsd_exec:s0
 /system/bin/gpslogd         u:object_r:gpsd_exec:s0
 /system/bin/gpscerd         u:object_r:gpsd_exec:s0
-
+/data/gps/brcm_gps_unix_socket  u:object_r:bluetooth_data_file:s0
+/data/gps(/.*)?                 u:object_r:bluetooth_data_file:s0
 # mmgr
 #/dev/socket/mmgr            u:object_r:mmgr_socket:s0
 /dev/socket/mmgr[0-9]*      u:object_r:mmgr_socket:s0
@@ -35,7 +43,7 @@
 /dev/asus_gsensor                       u:object_r:sensors_device:s0
 /dev/lightsensor                        u:object_r:sensors_device:s0
 /system/bin/akmd09911                   u:object_r:akmd_exec:s0
-/system/bin/a600cg_akmd09911            u:object_r:sensors_exec:s0
+/system/bin/a600cg_akmd09911            u:object_r:akmd_exec:s0
 /dev/i2c(.*)?                           u:object_r:i2c_device:s0
 
 # GPU
@@ -45,13 +53,13 @@
 /system/bin/crashlogd           	u:object_r:crashlogd_exec:s0
 
 # wlan_prov
-/system/bin/wlan_prov          		u:object_r:wlan_prov_exec:s0
+#/system/bin/wlan_prov          		u:object_r:wlan_prov_exec:s0
 
 # bd_prov (bluetooth)
 /system/bin/bd_prov             u:object_r:bd_prov_exec:s0
 
 # thermal management
-#/sys/devices/virtual/thermal(.*)?      u:object_r:sysfs_thermal_management:s0
+/sys/devices/virtual/thermal(.*)?      u:object_r:sysfs_thermal_management:s0
 /dev/socket/logconfig                  u:object_r:thermal_socket:s0
 
 # healthd
@@ -93,10 +101,11 @@
 
 /dev/ttyIFX[0-1]                u:object_r:tty_device:s0
 /dev/ttyMFD(.*)?                u:object_r:tty_device:s0
+/dev/ttyMFD3                	u:object_r:gps_device:s0
 
 #rootfs
 /logs(/.*)?                     u:object_r:log_file:s0
-/config(/.*)?                   u:object_r:config_file:s0
+#/config(/.*)?                   u:object_r:config_file:s0
 /factory(/.*)?                  u:object_r:factory_file:s0
 #/charger			u:object_r:charge_exec:s0
 #gauge

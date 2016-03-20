@@ -31,6 +31,8 @@ on init
     mkdir /mnt/media_rw/USBdisk3 0700 media_rw media_rw
     mkdir /mnt/media_rw/USBdisk4 0700 media_rw media_rw
     mkdir /mnt/media_rw/USBdisk5 0700 media_rw media_rw
+    # Support external SD card
+    mkdir /storage/MicroSD  0700 root root
 
     export EXTERNAL_STORAGE /storage/emulated/legacy
     export EMULATED_STORAGE_SOURCE /mnt/shell/emulated
@@ -45,8 +47,6 @@ on init
     symlink /storage/emulated/legacy /storage/sdcard0
     symlink /mnt/shell/emulated/0 /storage/emulated/legacy
 
-    # Support external SD card
-    mkdir /storage/MicroSD  0700 root root
 
     # Support USB Disk
     mkdir /storage/USBdisk1 0700 root root
@@ -56,7 +56,7 @@ on init
     mkdir /storage/USBdisk5 0700 root root
 
     #symlink for ASUS APP
-    mkdir   /Removable 0751 root sdcard_r
+    mkdir   /Removable 0756 root sdcard_r
     symlink /storage/MicroSD  /Removable/MicroSD
     symlink /storage/USBdisk1 /Removable/USBdisk1
     symlink /storage/USBdisk2 /Removable/USBdisk2
@@ -115,13 +115,13 @@ on fs
     restorecon_recursive /factory
     restorecon_recursive /logs
     #UPI gauge daemon
-    asus_exec /system/bin/touch /config/upi_gg
+    exec /system/bin/touch /config/upi_gg
     chown system system /config/upi_gg
     chmod 0660 /config/upi_gg
-    asus_exec /system/bin/touch /config/upi_bo
+    exec /system/bin/touch /config/upi_bo
     chown system system /config/upi_bo
     chmod 0660 /config/upi_bo
-    asus_exec /system/bin/touch /config/upi_bo_auto
+    exec /system/bin/touch /config/upi_bo_auto
     chown system system /config/upi_bo_auto
     chmod 0660 /config/upi_bo_auto
 
@@ -137,8 +137,8 @@ on post-fs
     chown system system /sys/devices/system/cpu/cpufreq/interactive/touchboostpulse
     chown system system /sys/devices/system/cpu/cpufreq/interactive/touchboostpulse_duration
     chown system system /sys/devices/system/cpu/cpufreq/interactive/touchboost_freq
-    chmod 0220 /sys/devices/system/cpu/cpufreq/interactive/touchboostpulse
-    chmod 0220 /sys/devices/system/cpu/cpufreq/interactive/boostpulse
+    chmod 0666 /sys/devices/system/cpu/cpufreq/interactive/touchboostpulse
+    chmod 0666 /sys/devices/system/cpu/cpufreq/interactive/boostpulse
 
 service sdcard /system/bin/sdcard -u 1023 -g 1023 -l /data/media /mnt/shell/emulated
     class late_start
